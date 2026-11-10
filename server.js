@@ -161,6 +161,25 @@ setInterval(() => {
   }
 }, 60_000).unref();
 
+// Explain controller timeouts: could we even open a connection, or did it go silent after?
+function watchTimeout(req, url, method) {
+  let connected = false;
+  req.on('socket', (sock) => {
+    if (!sock.connecting) connected = true;
+    else sock.once('connect', () => { connected = true; });
+  });
+  req.on('timeout', () => {
+    const where = `${url.protocol}//${url.host}`;
+    const msg = connected
+      ? `connected to ${where} but got no reply to ${method} ${url.pathname} within 10s (wrong port, or not a UniFi console?)`
+      : `could not connect to ${where} within 10s - check UNIFI_URL's IP/port and that the Docker host can reach it (firewall/VLAN rules)`;
+    req.destroy(new Error(msg));
+  });
+  req.on('error', (err) => {
+    if (err && err.code && !err.message.includes(url.host)) err.message = `${err.message} (${url.protocol}//${url.host})`;
+  });
+}
+
 // ---------------------------------------------------------------- UniFi controller client
 class UniFi {
   constructor(cfg) {
@@ -210,7 +229,7 @@ class UniFi {
           resolve({ status: res.statusCode, json, text });
         });
       });
-      req.on('timeout', () => req.destroy(new Error('UniFi controller request timed out')));
+      watchTimeout(req, url, method);
       req.on('error', reject);
       if (payload) req.write(payload);
       req.end();
@@ -302,7 +321,7 @@ class UniFiApiKey {
           resolve({ status: res.statusCode, json, text });
         });
       });
-      req.on('timeout', () => req.destroy(new Error('UniFi controller request timed out')));
+      watchTimeout(req, url, method);
       req.on('error', reject);
       if (payload) req.write(payload);
       req.end();
