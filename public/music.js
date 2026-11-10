@@ -215,7 +215,7 @@
 
   /* ------------------------------------------------------------------ audio engine */
   var ctx, out, dry, verb, lp, noiseBuf, song, tl, timer, cur = 0, nextTime = 0, stepDur = 0.1;
-  var started = false, muted = false, enabled = true, btn, hint, themeId = 'none';
+  var started = false, muted = false, enabled = true, btn, hint, themeId = 'none', fileUrl = '', audioEl = null;
   try { muted = localStorage.getItem(STORE) === '1'; } catch (e) { /* storage blocked */ }
 
   function setup() {
@@ -468,6 +468,12 @@
   function start() {
     if (started || starting || !enabled) return;
     if (!ctx && !setup()) return;
+    if (fileUrl && !audioEl) {
+      // your own track: an <audio> element routed through Web Audio so the 15% volume works on iPhones too
+      audioEl = new Audio(); audioEl.src = fileUrl; audioEl.loop = true; audioEl.preload = 'auto';
+      try { ctx.createMediaElementSource(audioEl).connect(dry); } catch (e) { /* older browsers: plays at full volume */ audioEl.volume = VOLUME; }
+      var pp = audioEl.play(); if (pp && pp.catch) pp.catch(function () {}); // must start inside the tap
+    }
     starting = true;
     var go = function () {
       starting = false;
@@ -479,6 +485,13 @@
     else { var p = ctx.resume(); if (p && p.then) p.then(go, function () { starting = false; }); else setTimeout(go, 50); }
   }
   function begin() {
+    if (audioEl) {
+      started = true;
+      if (audioEl.paused) audioEl.play().catch(function () {});
+      if (hint) hint.classList.add('gone');
+      render();
+      return;
+    }
     song = SONGS[themeId] || SONGS.lofi;
     tl = compile(song);
     stepDur = 60 / song.bpm / 4;
@@ -523,10 +536,11 @@
       opts = opts || {};
       enabled = opts.enabled !== false;
       themeId = opts.theme || 'none';
+      fileUrl = opts.file || '';
       if (!enabled) return;
       btn = document.createElement('button'); btn.type = 'button'; btn.className = 'music-btn';
       btn.addEventListener('click', function () { if (!started) { setMuted(false); start(); return; } setMuted(!muted); });
-      window.__musicState = function () { return { ctx: ctx ? ctx.state : 'none', started: started }; };
+      window.__musicState = function () { return { ctx: ctx ? ctx.state : 'none', started: started, file: audioEl ? (audioEl.paused ? 'paused' : 'playing ' + audioEl.currentTime.toFixed(1) + 's') : 'synth' }; };
       document.body.appendChild(btn);
       if (!muted) {
         hint = document.createElement('div'); hint.className = 'music-hint';
@@ -536,7 +550,11 @@
       }
       render();
       EVENTS.forEach(function (ev) { document.addEventListener(ev, onFirstGesture, { capture: true, passive: true }); });
-      document.addEventListener('visibilitychange', function () { if (!ctx || !started) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
+      document.addEventListener('visibilitychange', function () {
+        if (!ctx || !started) return;
+        if (document.hidden) { ctx.suspend(); if (audioEl) audioEl.pause(); }
+        else { ctx.resume(); if (audioEl) audioEl.play().catch(function () {}); }
+      });
     },
     // rolling thunder (Halloween lightning)
     thunder: function () {

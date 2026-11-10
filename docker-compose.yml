@@ -13,3 +13,4 @@ services:
     # Optional wrong-password video: map your file in and set WRONG_PASSWORD_VIDEO=/media/wrong-password.mp4
     # volumes:
     #   - ./wrong-password.mp4:/media/wrong-password.mp4:ro
+    #   - ./music:/media/music:ro            # then set MUSIC_DIR=/media/music

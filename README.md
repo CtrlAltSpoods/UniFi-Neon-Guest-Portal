@@ -169,6 +169,23 @@ Each theme has its own track:
 | `MUSIC` | `on` | Set to `off` to disable the music entirely |
 
 To add or change a track, edit the `SONGS` table in `public/music.js`.
+
+**Your own music files.** To play your own tracks instead, put audio files in a folder named after the
+theme (`australiaday.mp3`, `christmas.mp3`, `halloween.m4a`, ...; `default.mp3` replaces the everyday
+lo-fi track), map the folder into the container read-only and set `MUSIC_DIR`:
+
+```yaml
+volumes:
+  - /mnt/user/appdata/guest-portal/music:/media/music:ro
+environment:
+  - MUSIC_DIR=/media/music
+```
+
+On Unraid: add a **Path** (container path `/media/music`, read-only) and a **Variable** `MUSIC_DIR=/media/music`.
+Files can be `.mp3`, `.m4a`, `.aac`, `.ogg`, `.wav` or `.flac`; they loop at the same 15% volume, start on
+the first tap and use the same mute button. Themes without a file keep their built-in track. The log lists
+the files it found at startup. Browsers can't play MIDI files directly, so convert MIDI to MP3 first
+(for example with MuseScore or any MIDI-to-MP3 converter). Keep your music files out of the repo.
 On iPhones, the ring/silent switch mutes web audio, so music is silent when the phone is on silent.
 
 ## Wrong-password video (optional)

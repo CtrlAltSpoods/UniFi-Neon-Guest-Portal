@@ -34,6 +34,7 @@ const CONFIG = {
   timeZone: env('PORTAL_TIMEZONE', 'Australia/Adelaide'),
   music: env('MUSIC', 'on').toLowerCase() !== 'off', // background music (starts on first tap)
   wrongVideo: env('WRONG_PASSWORD_VIDEO', ''), // optional video file shown when the password is wrong
+  musicDir: env('MUSIC_DIR', ''), // optional folder of your own tracks: <theme>.mp3 / default.mp3
   guestMinutes: parseInt(env('GUEST_MINUTES', '1440'), 10), // 24h
   successUrl: env('SUCCESS_URL', ''), // optional fixed landing page after login
   unifi: {
@@ -81,6 +82,21 @@ if (CONFIG.wrongVideo) {
   }
 }
 
+// ---------------------------------------------------------------- optional custom music per theme
+// MUSIC_DIR/<theme>.mp3 (e.g. australiaday.mp3, christmas.m4a) replaces that theme's built-in track;
+// default.mp3 replaces the everyday lo-fi track.
+const AUDIO_TYPES = { '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.aac': 'audio/aac', '.ogg': 'audio/ogg', '.oga': 'audio/ogg', '.wav': 'audio/wav', '.flac': 'audio/flac' };
+function customTrack(themeId) {
+  if (!CONFIG.musicDir) return null;
+  for (const name of [themeId === 'none' ? 'default' : themeId]) {
+    for (const ext of Object.keys(AUDIO_TYPES)) {
+      const file = path.join(CONFIG.musicDir, name + ext);
+      try { const st = fs.statSync(file); if (st.isFile()) return { name: name + ext, file, size: st.size, type: AUDIO_TYPES[ext] }; } catch (_) { /* not there */ }
+    }
+  }
+  return null;
+}
+
 // Stream a video with HTTP range support (iPhones refuse to play video without it).
 function serveVideo(req, res, v) {
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
@@ -125,6 +141,7 @@ function renderPortal(theme) {
     theme: theme.id,
     banner: theme.banner,
     music: CONFIG.music,
+    musicFile: (() => { const c = customTrack(theme.id); return c ? `/theme-music/${encodeURIComponent(c.name)}` : ''; })(),
     wrongVideo: wrongVideo ? '/wrong-password-video' : '',
   }).replace(/</g, '\\u003c');
   return Buffer.from(tpl
@@ -532,6 +549,13 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, demo: DEMO_MODE });
     }
 
+    if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/theme-music/')) {
+      const m = /^\/theme-music\/([a-z]+)\.([a-z0-9]+)$/.exec(pathname);
+      const c = m && customTrack(m[1] === 'default' ? 'none' : m[1]);
+      if (!c || c.name !== `${m[1]}.${m[2]}`) { res.writeHead(404); return res.end('Not found'); }
+      return serveVideo(req, res, c);
+    }
+
     if ((req.method === 'GET' || req.method === 'HEAD') && pathname === '/wrong-password-video') {
       if (!wrongVideo) { res.writeHead(404); return res.end('Not found'); }
       return serveVideo(req, res, wrongVideo);
@@ -581,6 +605,12 @@ server.on('error', (err) => {
 
 server.listen(CONFIG.port, () => {
   log(`"${CONFIG.title}" portal listening on :${CONFIG.port}`);
+  if (CONFIG.musicDir) {
+    try {
+      const found = fs.readdirSync(CONFIG.musicDir).filter((f) => AUDIO_TYPES[path.extname(f).toLowerCase()]);
+      log(`Custom music in ${CONFIG.musicDir}: ${found.length ? found.join(', ') : '(no audio files found - name them e.g. australiaday.mp3)'}`);
+    } catch (e) { console.warn(`WARNING: MUSIC_DIR "${CONFIG.musicDir}" can't be read (${e.message}) - check the volume mapping`); }
+  }
   if (wrongVideo) log(`Wrong-password video: ${wrongVideo.file} (${(wrongVideo.size / 1048576).toFixed(1)} MB)`);
   const t = currentTheme('');
   log(`Theme: ${CONFIG.theme === 'auto' ? `auto (${CONFIG.timeZone}) \u2014 today: ${t.id}` : CONFIG.theme}`);
