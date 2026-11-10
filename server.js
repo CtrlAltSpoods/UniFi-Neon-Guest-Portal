@@ -36,6 +36,8 @@ const CONFIG = {
   successUrl: env('SUCCESS_URL', ''), // optional fixed landing page after login
   unifi: {
     url: env('UNIFI_URL', '').replace(/\/+$/, ''), // e.g. https://192.168.1.1  or https://10.0.0.2:8443
+    apiKey: env('UNIFI_API_KEY', ''),    // preferred: Network 9.3+ (Settings > Control Plane > Integrations)
+    siteId: env('UNIFI_SITE_ID', ''),    // API key mode only; blank = look it up
     username: env('UNIFI_USERNAME', ''),
     password: env('UNIFI_PASSWORD', ''),
     site: env('UNIFI_SITE', ''), // blank = use the site from the redirect URL (usually "default")
@@ -271,7 +273,115 @@ class UniFi {
   }
 }
 
-const unifi = new UniFi(CONFIG.unifi);
+// ---------------------------------------------------------------- UniFi official Network API (API key)
+// Docs: https://help.ui.com/hc/en-us/articles/31228198640023
+//   GET  {base}/sites
+//   GET  {base}/sites/{siteId}/clients?filter=macAddress.eq('aa:bb:..')
+//   POST {base}/sites/{siteId}/clients/{clientId}/actions  { action: 'AUTHORIZE_GUEST_ACCESS', timeLimitMinutes }
+class UniFiApiKey {
+  constructor(cfg) {
+    this.cfg = cfg;
+    this.origin = new URL(cfg.url);
+    this.basePath = null; // resolved on first use
+    this.siteIds = new Map(); // redirect site name -> site UUID
+  }
+
+  request(method, pathname, body) {
+    return new Promise((resolve, reject) => {
+      const url = new URL(pathname, this.origin);
+      const lib = url.protocol === 'https:' ? https : http;
+      const payload = body ? JSON.stringify(body) : null;
+      const headers = { Accept: 'application/json', 'X-API-KEY': this.cfg.apiKey };
+      if (payload) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = Buffer.byteLength(payload); }
+      const req = lib.request(url, { method, headers, rejectUnauthorized: this.cfg.verifyTls, timeout: 10_000 }, (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8');
+          let json = null; try { json = JSON.parse(text); } catch (_) { /* not json */ }
+          resolve({ status: res.statusCode, json, text });
+        });
+      });
+      req.on('timeout', () => req.destroy(new Error('UniFi controller request timed out')));
+      req.on('error', reject);
+      if (payload) req.write(payload);
+      req.end();
+    });
+  }
+
+  static list(json) {
+    if (Array.isArray(json)) return json;
+    if (json && Array.isArray(json.data)) return json.data;
+    return [];
+  }
+
+  async base() {
+    if (this.basePath) return this.basePath;
+    // UniFi OS consoles serve the API under /proxy/network; self-hosted Network apps may serve it directly.
+    for (const candidate of ['/proxy/network/integration/v1', '/integration/v1']) {
+      const r = await this.request('GET', `${candidate}/sites?limit=200`);
+      if (r.status === 401 || r.status === 403) throw new Error(`API key rejected (HTTP ${r.status}) - check UNIFI_API_KEY`);
+      if (r.status >= 200 && r.status < 300 && r.json) {
+        this.basePath = candidate;
+        this.sites = UniFiApiKey.list(r.json);
+        return candidate;
+      }
+    }
+    throw new Error('UniFi Network API not found - needs UniFi Network 9.3 or later');
+  }
+
+  async siteId(siteName) {
+    if (this.cfg.siteId) return this.cfg.siteId;
+    if (this.siteIds.has(siteName)) return this.siteIds.get(siteName);
+    await this.base();
+    const sites = this.sites || [];
+    const match = sites.find((x) => x.internalReference === siteName)
+      || sites.find((x) => String(x.name || '').toLowerCase() === String(siteName).toLowerCase())
+      || (sites.length === 1 ? sites[0] : null)
+      || (siteName === 'default' ? sites.find((x) => String(x.name).toLowerCase() === 'default') : null);
+    if (!match) throw new Error(`site "${siteName}" not found (sites: ${sites.map((x) => x.name).join(', ')}) - set UNIFI_SITE_ID`);
+    this.siteIds.set(siteName, match.id);
+    return match.id;
+  }
+
+  async findClientId(base, siteId, mac) {
+    const sameMac = (c) => normMac(c.macAddress || c.mac) === mac;
+    const filter = encodeURIComponent(`macAddress.eq('${mac}')`);
+    const r = await this.request('GET', `${base}/sites/${siteId}/clients?filter=${filter}`);
+    if (r.status >= 200 && r.status < 300) {
+      const hit = UniFiApiKey.list(r.json).find(sameMac);
+      if (hit) return hit.id;
+    }
+    // Fallback: page through connected clients (in case filtering isn't supported).
+    for (let offset = 0; offset < 5000; offset += 200) {
+      const p = await this.request('GET', `${base}/sites/${siteId}/clients?offset=${offset}&limit=200`);
+      if (p.status < 200 || p.status >= 300) break;
+      const items = UniFiApiKey.list(p.json);
+      const hit = items.find(sameMac);
+      if (hit) return hit.id;
+      if (items.length < 200) break;
+    }
+    return null;
+  }
+
+  async authorizeGuest({ site, mac, minutes }) {
+    const base = await this.base();
+    const siteId = await this.siteId(site);
+    // A freshly-joined device can take a moment to show up in the client list.
+    let clientId = null;
+    for (let attempt = 0; attempt < 4 && !clientId; attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 1500));
+      clientId = await this.findClientId(base, siteId, mac);
+    }
+    if (!clientId) throw new Error(`client ${mac} not found on site ${siteId}`);
+    const body = { action: 'AUTHORIZE_GUEST_ACCESS', timeLimitMinutes: minutes };
+    const r = await this.request('POST', `${base}/sites/${siteId}/clients/${clientId}/actions`, body);
+    if (r.status < 200 || r.status >= 300) throw new Error(`AUTHORIZE_GUEST_ACCESS failed (HTTP ${r.status}): ${r.text.slice(0, 200)}`);
+    return true;
+  }
+}
+
+const unifi = CONFIG.unifi.url && CONFIG.unifi.apiKey ? new UniFiApiKey(CONFIG.unifi) : new UniFi(CONFIG.unifi);
 
 // ---------------------------------------------------------------- static files
 const MIME = {
@@ -397,7 +507,13 @@ server.listen(CONFIG.port, () => {
   const t = currentTheme('');
   log(`Theme: ${CONFIG.theme === 'auto' ? `auto (${CONFIG.timeZone}) \u2014 today: ${t.id}` : CONFIG.theme}`);
   if (DEMO_MODE) log('WARNING: UNIFI_URL not set — running in DEMO MODE (password is checked but no device is authorized).');
-  else log(`UniFi controller: ${CONFIG.unifi.url} (type: ${CONFIG.unifi.type}, site: ${CONFIG.unifi.site || 'from redirect'})`);
+  else if (CONFIG.unifi.apiKey) {
+    log(`UniFi controller: ${CONFIG.unifi.url} (auth: API key, site: ${CONFIG.unifi.siteId || CONFIG.unifi.site || 'from redirect'})`);
+    unifi.base().then((b) => log(`[unifi] API key OK (${b}, ${unifi.sites.length} site(s))`)).catch((e) => log(`[unifi] WARNING: ${e.message}`));
+  } else {
+    log(`UniFi controller: ${CONFIG.unifi.url} (auth: username/password, type: ${CONFIG.unifi.type}, site: ${CONFIG.unifi.site || 'from redirect'})`);
+    if (!CONFIG.unifi.username) log('[unifi] WARNING: set UNIFI_API_KEY (recommended) or UNIFI_USERNAME/UNIFI_PASSWORD');
+  }
 });
 
 for (const sig of ['SIGINT', 'SIGTERM']) {

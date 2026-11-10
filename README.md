@@ -20,9 +20,9 @@ The image is published to GitHub Container Registry for `amd64` and `arm64` (PCs
 ```bash
 curl -O https://raw.githubusercontent.com/CtrlAltSpoods/UniFi-Neon-Guest-Portal/main/docker-compose.yml
 curl -o .env https://raw.githubusercontent.com/CtrlAltSpoods/UniFi-Neon-Guest-Portal/main/.env.example
-nano .env                   # set PORTAL_PASSWORD, PORTAL_TITLE, controller URL + login
+nano .env                   # set PORTAL_PASSWORD, PORTAL_TITLE, UNIFI_URL + UNIFI_API_KEY
 docker compose up -d
-docker compose logs -f      # should say "logged in" on the first guest sign-in
+docker compose logs -f      # should say "API key OK"
 ```
 
 **With docker run**
@@ -31,7 +31,7 @@ docker compose logs -f      # should say "logged in" on the first guest sign-in
 docker run -d --name neon-guest-portal --restart unless-stopped -p 80:8080 \
   -e PORTAL_PASSWORD='your-password' \
   -e PORTAL_TITLE='My Guest Wi-Fi' \
-  -e UNIFI_URL='https://192.168.1.1' -e UNIFI_USERNAME='portal' -e UNIFI_PASSWORD='...' \
+  -e UNIFI_URL='https://192.168.1.1' -e UNIFI_API_KEY='your-api-key' \
   ghcr.io/ctrlaltspoods/unifi-neon-guest-portal:latest
 ```
 
@@ -47,10 +47,26 @@ guests to `http://<portal-ip>/guest/s/<site>/`.
 Without `UNIFI_URL` set it runs in **demo mode**: the page and password work, but nobody is let online.
 Handy for previewing at `http://<docker-host>/` (add `?theme=christmas` etc. to preview holiday themes).
 
-## 2. Create a controller account for the portal
+## 2. Give the portal access to your controller
 
-Use a **local** admin (not a ui.com cloud login, and no 2FA) with access to the Network app —
-a dedicated user like `portal` is best. Put its details in `UNIFI_USERNAME` / `UNIFI_PASSWORD`.
+UniFi's external portal option only redirects guests; it's the portal's job to tell the controller
+"let this device on". That needs one of these:
+
+**Option A: API key (recommended, UniFi Network 9.3 or later)**
+
+1. In UniFi Network, open **Settings → Control Plane → Integrations** and create an API key.
+2. Set `UNIFI_URL` and `UNIFI_API_KEY`. No username or password needed.
+
+This uses Ubiquiti's official Network API
+([External Hotspot API for Authorization Clients](https://help.ui.com/hc/en-us/articles/31228198640023-External-Hotspot-API-for-Authorization-Clients)):
+the portal looks up the guest's device by MAC address and sends `AUTHORIZE_GUEST_ACCESS`.
+You can revoke the key at any time without changing anyone's password. The logs show
+`API key OK` at startup when it's working.
+
+**Option B: username and password (older controllers)**
+
+Use a dedicated **local** admin (not a ui.com cloud login, and no 2FA) and set
+`UNIFI_USERNAME` / `UNIFI_PASSWORD`. Only used when `UNIFI_API_KEY` is blank.
 
 ## 3. Point UniFi at the portal
 
@@ -78,7 +94,9 @@ also add that IP to the pre-authorisation allowance.
 | `GUEST_MINUTES` | `1440` | How long a device stays authorised |
 | `SUCCESS_URL` | *(blank)* | Fixed page after login; blank = page the guest originally wanted |
 | `UNIFI_URL` | *(blank)* | e.g. `https://192.168.1.1` (UniFi OS) or `https://10.0.0.5:8443` (classic). Blank = demo mode |
-| `UNIFI_USERNAME` / `UNIFI_PASSWORD` | | Local controller admin |
+| `UNIFI_API_KEY` | *(blank)* | API key from Settings → Control Plane → Integrations (Network 9.3+). Preferred |
+| `UNIFI_SITE_ID` | *(looked up)* | Site UUID for API key mode, if auto-lookup picks the wrong site |
+| `UNIFI_USERNAME` / `UNIFI_PASSWORD` | | Local controller admin, used only without an API key |
 | `UNIFI_SITE` | *(from redirect)* | Site ID, usually `default` |
 | `UNIFI_TYPE` | `auto` | `auto`, `unifios` or `classic` |
 | `UNIFI_VERIFY_TLS` | `false` | Controllers use self-signed certs |
@@ -119,7 +137,8 @@ To add a holiday: add its date window in `holidays.js`, its decorations in `publ
 ## Troubleshooting
 
 - **"Password accepted, but the network didn't respond"** — check `docker compose logs`; usually a wrong
-  `UNIFI_URL`, a cloud/2FA account, or the Docker host can't reach the controller.
+  `UNIFI_URL`, a revoked/mistyped API key, a cloud/2FA account, or the Docker host can't reach the controller.
+- **"UniFi Network API not found"** in the logs — your controller is older than Network 9.3; use option B.
 - **"We couldn't identify your device"** — the page was opened without UniFi's `?id=<mac>` parameter
   (e.g. typed in by hand). Reconnect to the Wi-Fi so UniFi redirects properly.
 - **Portal never appears** — confirm port 80 on the Docker host is reachable from the guest VLAN and that
