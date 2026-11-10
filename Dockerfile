@@ -4,7 +4,7 @@ ENV NODE_ENV=production \
     PORT=8080
 
 WORKDIR /app
-COPY package.json server.js ./
+COPY package.json server.js holidays.js ./
 COPY public ./public
 
 USER node

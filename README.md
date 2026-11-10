@@ -75,6 +75,37 @@ also add that IP to the pre-authorisation allowance.
 | `UNIFI_VERIFY_TLS` | `false` | Controllers use self-signed certs |
 | `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_SEC` | `10` / `300` | Wrong-password attempts allowed per IP per window |
 
+## Holiday themes
+
+The portal dresses itself up for every South Australian public holiday (plus Remembrance Day),
+using the date in `PORTAL_TIMEZONE` (default `Australia/Adelaide`). Dates follow the SafeWork SA
+public holiday list, including the moving ones (Easter, Adelaide Cup, King's Birthday, Labour Day)
+and weekend substitute days.
+
+| Theme | Shows | What you get |
+|---|---|---|
+| `newyear` | New Year's Eve – New Year's Day (+ substitute Monday) | Fireworks over the city, gold sparkles |
+| `australiaday` | 24–26 Jan (+ substitute Monday) | Green & gold, Southern Cross in the sky, falling wattle |
+| `adelaidecup` | Thursday – Adelaide Cup Day (2nd Mon in March) | Neon racehorses galloping down the street, lucky horseshoe |
+| `easter` | Thursday – Easter Monday | Hopping bunny, bunny ears on the logo, 6 hidden eggs to find |
+| `anzac` | 24–25 Apr | Dawn sky, poppy field, falling petals, steady (non-flickering) neon, "Lest We Forget" |
+| `kings` | King's Birthday long weekend (2nd Mon in June) | Crown on the logo, royal purple & gold, bunting |
+| `labour` | Labour Day long weekend (1st Mon in October) | Hard hat on the logo, construction cranes with an 8·8·8 sign |
+| `remembrance` | 9–11 Nov | Poppy field, falling petals, "Lest We Forget" |
+| `christmas` | 1–30 Dec (Christmas Eve, Christmas Day, Proclamation Day + substitutes) | Snow, Santa's sleigh, fairy lights, presents, tree, Santa hat, sleeps-till-Christmas countdown |
+
+Settings:
+
+| Variable | Default | What it does |
+|---|---|---|
+| `THEME` | `auto` | `auto` follows the calendar, `off` disables themes, or force one (e.g. `christmas`) |
+| `PORTAL_TIMEZONE` | `Australia/Adelaide` | Time zone used to work out today's date |
+| `THEME_PREVIEW` | `true` | Allow previewing a theme with `?theme=<name>` on the portal URL |
+
+Preview any theme in a browser: `http://<docker-host>/?theme=easter`
+
+To add a holiday: add its date window in `holidays.js`, its decorations in `public/themes.js` and its colours in `public/themes.css`.
+
 ## Troubleshooting
 
 - **"Password accepted, but the network didn't respond"** — check `docker compose logs`; usually a wrong
@@ -88,7 +119,10 @@ also add that IP to the pre-authorisation allowance.
 
 ```
 server.js            web server + UniFi API client
-public/index.html    the portal page template (all CSS/JS inline; title/logo filled in at startup)
+public/index.html    the portal page template (title/logo filled in per request)
+holidays.js          SA holiday dates -> active theme
+public/themes.js     holiday decorations, particles, Easter egg hunt
+public/themes.css    holiday colours and animation
 public/favicon.svg
 Dockerfile, docker-compose.yml, .env.example
 ```

@@ -1,0 +1,134 @@
+/* ==================================================================
+   Holiday themes. body gets class "t-<id>" (e.g. t-christmas).
+   Each theme can recolour the neon via CSS variables and add
+   decorations into the .fx layers (built in themes.js).
+=================================================================== */
+
+/* ---------- shared ---------- */
+.fx{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+#fxCanvas{position:absolute; inset:0; width:100%; height:100%}
+.wrap{pointer-events:none}
+.wrap > *{pointer-events:auto}
+
+.banner{
+  display:none; align-items:center; justify-content:center; gap:10px;
+  max-width:min(92vw,470px); padding:9px 18px; border-radius:999px;
+  font:700 clamp(.86rem,3.5vw,1.02rem)/1.25 var(--display); letter-spacing:.04em; text-align:center;
+  color:#fff; text-shadow:0 0 10px var(--accent);
+  background:rgba(8,4,24,.62);
+  border:2px solid var(--accent);
+  box-shadow:0 0 14px var(--accent), inset 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  opacity:0; animation:ignite 2s 1s forwards, bannerglow 3.2s 3s ease-in-out infinite;
+}
+.banner.on{display:inline-flex}
+.banner svg{width:26px; height:26px; flex:none}
+.banner .count{padding:2px 9px; border-radius:99px; background:rgba(255,255,255,.12); font-size:.85em; white-space:nowrap}
+@keyframes bannerglow{50%{box-shadow:0 0 26px var(--accent), inset 0 0 16px color-mix(in srgb, var(--accent) 60%, transparent)}}
+
+.logo{position:relative}
+.logo-deco{position:absolute; pointer-events:none; transform-origin:50% 100%}
+.logo-deco svg{display:block; width:100%; height:auto; overflow:visible}
+
+.btn{background:linear-gradient(100deg,var(--b1,#ff2bd6) 0%,var(--b2,#b43cff) 55%,var(--b3,#5d5cff) 100%)}
+.frame{position:relative}
+
+.neon-glow{filter:drop-shadow(0 0 4px currentColor) drop-shadow(0 0 10px currentColor)}
+
+/* ---------- Christmas ---------- */
+body.t-christmas{--pink:#ff3550; --cyan:#3dff86; --accent:#ff3550; --b1:#ff3550; --b2:#d1122e; --b3:#169c4a}
+.t-christmas .frame::after{ /* snow on the card */
+  content:""; position:absolute; left:14px; right:14px; top:-9px; height:18px; border-radius:12px 12px 4px 4px;
+  background:
+    radial-gradient(circle at 12px 13px,#fff 10px,transparent 11px) 0 0/24px 18px repeat-x,
+    linear-gradient(#fff,#fff) 0 12px/100% 6px no-repeat;
+  filter:drop-shadow(0 2px 4px rgba(150,200,255,.6));
+}
+.lights{position:absolute; left:0; right:0; top:0; height:70px}
+.lights svg{width:100%; height:100%}
+.bulb{animation:bulb 1.4s steps(1) infinite}
+.bulb.alt{animation-delay:.7s}
+@keyframes bulb{50%{opacity:.25}}
+.santa{position:absolute; top:13%; left:0; width:clamp(190px,34vw,360px); color:#ffd34d; animation:fly 24s 1.5s linear infinite; transform:translateX(-60vw)}
+@keyframes fly{
+  0%{transform:translate(-60vw,40px) rotate(-5deg)}
+  50%{transform:translate(45vw,-10px) rotate(-1deg)}
+  100%{transform:translate(115vw,30px) rotate(-6deg)}
+}
+.leg{transform-box:fill-box; transform-origin:50% 0; animation:gallop .45s ease-in-out infinite alternate}
+.leg.b{animation-delay:-.22s}
+@keyframes gallop{from{transform:rotate(-28deg)}to{transform:rotate(26deg)}}
+.presents{position:absolute; bottom:3.5%; width:clamp(130px,24vw,260px)}
+.presents.l{left:2%} .presents.r{right:2%}
+.tree{position:absolute; bottom:12%; left:auto; right:5%; width:clamp(70px,11vw,130px); color:#3dff86}
+.tree .orn{animation:bulb 1.8s steps(1) infinite}
+
+/* ---------- New Year ---------- */
+body.t-newyear{--accent:#ffd34d; --b1:#ffb800; --b2:#ff2bd6; --b3:#5d5cff}
+
+/* ---------- Australia Day ---------- */
+body.t-australiaday{--pink:#ffc21a; --cyan:#22e07f; --accent:#ffc21a; --b1:#169c55; --b2:#0f7d44; --b3:#c99700}
+.cross{position:absolute; top:6%; left:5%; width:clamp(110px,18vw,200px); color:#fff}
+.cross .st{animation:twinkle 3s ease-in-out infinite}
+
+/* ---------- Adelaide Cup ---------- */
+body.t-adelaidecup{--accent:#ffd34d; --b1:#ff2bd6; --b2:#b43cff; --b3:#d4a017}
+.horse{position:absolute; bottom:4.2%; left:0; width:clamp(120px,20vw,220px); color:#ffd34d; animation:race 9s linear infinite; transform:translateX(-40vw)}
+.horse.h2{color:#16f2ff; animation-duration:10.5s; animation-delay:-4s; bottom:2.8%; width:clamp(105px,17vw,190px)}
+@keyframes race{from{transform:translateX(-40vw)}to{transform:translateX(115vw)}}
+.horse .bob{animation:bob .45s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-4px)}}
+
+/* ---------- Easter ---------- */
+body.t-easter{--pink:#ff8fd6; --cyan:#7ff5d2; --violet:#b69bff; --accent:#ffcf6e; --b1:#ff79c9; --b2:#b07cff; --b3:#56c8ef}
+.bunny-run{position:absolute; bottom:4.5%; left:0; width:clamp(70px,11vw,120px); color:#fff; animation:race 16s linear infinite; transform:translateX(-30vw)}
+.bunny-run .hop{animation:hop .55s cubic-bezier(.3,0,.7,1) infinite}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-34%)}}
+.egg{
+  position:absolute; width:clamp(30px,7vw,40px); aspect-ratio:30/40; padding:0; border:0; background:none;
+  pointer-events:auto; cursor:pointer; transform:translate(-50%,-50%) rotate(var(--r,0deg));
+  filter:drop-shadow(0 0 5px rgba(255,255,255,.35)); opacity:.88; transition:transform .2s, opacity .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.egg::before{content:""; position:absolute; inset:-10px} /* bigger tap target */
+.egg:hover{opacity:1; transform:translate(-50%,-50%) rotate(var(--r,0deg)) scale(1.12)}
+.egg:focus-visible{outline:2px solid #fff; outline-offset:4px; border-radius:50%}
+.egg svg{width:100%; height:100%; display:block; overflow:visible}
+.egg.found{opacity:1; animation:eggpop .7s cubic-bezier(.2,1.6,.4,1) forwards; filter:drop-shadow(0 0 10px var(--accent)) drop-shadow(0 0 22px var(--accent))}
+@keyframes eggpop{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-80%) scale(1.5) rotate(12deg)}100%{transform:translate(-50%,-50%) scale(1.15)}}
+.egg-spark{position:absolute; width:6px; height:6px; border-radius:50%; pointer-events:none; animation:spark .8s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2); opacity:0}}
+
+/* ---------- Anzac Day & Remembrance Day ---------- */
+body.t-anzac, body.t-remembrance{--pink:#ff2e3b; --cyan:#f1e7cf; --violet:#7a2430; --accent:#ff2e3b; --b1:#d81e2c; --b2:#a3121c; --b3:#5e0b12}
+.t-anzac .top, .t-remembrance .top{animation:ignite 2.6s .2s forwards} /* steady, no buzzing */
+.t-anzac .sign, .t-remembrance .sign{animation:none}
+.t-anzac .guest .gl, .t-remembrance .guest .gl, .t-anzac .win.flick, .t-remembrance .win.flick{animation:none}
+.t-anzac .beam, .t-remembrance .beam{display:none}
+.t-anzac .sky{ /* dawn service */
+  background:
+    radial-gradient(120% 55% at 50% 100%, rgba(255,150,70,.55) 0%, rgba(255,90,60,.25) 32%, transparent 62%),
+    linear-gradient(180deg,#05030f 0%,#141036 40%,#3b1f4a 70%,#a2493f 100%);
+}
+.t-anzac .moon, .t-remembrance .moon{background:radial-gradient(circle at 35% 35%,#fffaf0,#e9dcc0 60%,#b9a37c); box-shadow:0 0 40px 8px rgba(255,240,200,.25); -webkit-mask:none; mask:none; width:clamp(40px,7vw,90px)}
+.poppies{position:absolute; left:0; right:0; bottom:2%; height:clamp(70px,13vh,130px)}
+.poppy-stem{position:absolute; bottom:0; transform-origin:50% 100%; animation:sway 4s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+
+/* ---------- King's Birthday ---------- */
+body.t-kings{--pink:#b46bff; --cyan:#ffd34d; --violet:#7b3dff; --accent:#ffd34d; --b1:#9b4dff; --b2:#6c2bd9; --b3:#d4a017}
+.bunting{position:absolute; left:0; right:0; top:0; height:60px}
+.bunting svg{width:100%; height:100%}
+
+/* ---------- Labour Day ---------- */
+body.t-labour{--pink:#ff8a1f; --cyan:#ffe14d; --accent:#ff8a1f; --b1:#ff8a1f; --b2:#ff5a1f; --b3:#d49b00}
+.crane{position:absolute; bottom:6%; width:clamp(150px,26vw,300px); color:#ffb43b}
+.crane.l{left:-2%} .crane.r{right:-3%; transform:scaleX(-1)}
+.crane .hook{transform-box:view-box; transform-origin:150px 22px; animation:swing 3.6s ease-in-out infinite alternate}
+@keyframes swing{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.crane .lamp{animation:blink 1.4s steps(1) infinite}
+
+@media (prefers-reduced-motion:reduce){
+  .santa,.horse,.bunny-run{display:none}
+  .banner{opacity:1}
+}

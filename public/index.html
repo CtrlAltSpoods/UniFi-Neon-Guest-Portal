@@ -264,6 +264,7 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
   #rain,.beam,.trail{display:none}
 }
 </style>
+<link rel="stylesheet" href="/themes.css">
 </head>
 <body>
 
@@ -360,6 +361,7 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
 </main>
 
 <script type="application/json" id="cfg">{{CONFIG_JSON}}</script>
+<script src="/themes.js"></script>
 <script>
 (function(){
   'use strict';
@@ -502,8 +504,13 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
     })();
   }
 
+  /* ---------- holiday theme (themes.js) ---------- */
+  var THEME = { rain: true };
+  try { if (window.NeonThemes) THEME = window.NeonThemes.apply(CFG, { reduce: reduce, topLen: topLen }); } catch (e) { if (window.console) console.warn('theme failed', e); }
+
   /* ---------- rain ---------- */
-  var cvs=document.getElementById('rain'), ctx=cvs.getContext('2d'), drops=[], W=0, H=0, running=!reduce;
+  var cvs=document.getElementById('rain'), ctx=cvs.getContext('2d'), drops=[], W=0, H=0, running=!reduce && THEME.rain;
+  if (!THEME.rain) cvs.style.display='none';
   function size(){
     var dpr=Math.min(window.devicePixelRatio||1, 2);
     W=window.innerWidth; H=window.innerHeight;
@@ -530,7 +537,7 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
   }
   window.addEventListener('resize', size); size();
   if (running) rain();
-  document.addEventListener('visibilitychange', function(){ var was=running; running=!document.hidden && !reduce; if(running && !was) rain(); });
+  document.addEventListener('visibilitychange', function(){ var was=running; running=!document.hidden && !reduce && THEME.rain; if(running && !was) rain(); });
 
   /* ================= PORTAL LOGIC ================= */
   var qs = new URLSearchParams(location.search);

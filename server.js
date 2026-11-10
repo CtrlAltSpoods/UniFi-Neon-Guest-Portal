@@ -17,6 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { URL } = require('url');
+const holidays = require('./holidays');
 
 // ---------------------------------------------------------------- config
 const env = (k, d) => (process.env[k] !== undefined && process.env[k] !== '' ? process.env[k] : d);
@@ -28,6 +29,9 @@ const CONFIG = {
   logoTop: env('LOGO_TOP', ''),       // default: first word of PORTAL_TITLE
   logoBottom: env('LOGO_BOTTOM', ''), // default: second word of PORTAL_TITLE, else "WI-FI"
   footer: env('FOOTER_TEXT', ''),     // default: PORTAL_TITLE
+  theme: env('THEME', 'auto').toLowerCase(), // auto | off | christmas | easter | ...
+  themePreview: env('THEME_PREVIEW', 'true').toLowerCase() !== 'false', // allow ?theme=<id> in the URL
+  timeZone: env('PORTAL_TIMEZONE', 'Australia/Adelaide'),
   guestMinutes: parseInt(env('GUEST_MINUTES', '1440'), 10), // 24h
   successUrl: env('SUCCESS_URL', ''), // optional fixed landing page after login
   unifi: {
@@ -62,12 +66,24 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 // ---------------------------------------------------------------- page rendering
 const escHtml = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function renderPortal() {
-  const tpl = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+const TEMPLATE = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+
+function currentTheme(previewId) {
+  const { y, m, d } = holidays.localDate(CONFIG.timeZone);
+  if (previewId) return holidays.previewTheme(previewId, y, m, d);
+  if (CONFIG.theme === 'off' || CONFIG.theme === 'none') return { id: 'none', banner: '' };
+  if (CONFIG.theme !== 'auto') return holidays.previewTheme(CONFIG.theme, y, m, d);
+  return holidays.themeFor(y, m, d);
+}
+
+function renderPortal(theme) {
+  const tpl = TEMPLATE;
   const pageCfg = JSON.stringify({
     title: CONFIG.title,
     top: CONFIG.logoTop.toUpperCase(),
     bottom: CONFIG.logoBottom.toUpperCase(),
+    theme: theme.id,
+    banner: theme.banner,
   }).replace(/</g, '\\u003c');
   return Buffer.from(tpl
     .replace(/\{\{TITLE_HEADING\}\}/g, () => escHtml(CONFIG.title).replace(/-/g, '&#8209;')) // keep "Wi-Fi" together
@@ -76,7 +92,6 @@ function renderPortal() {
     .replace(/\{\{LOGO_LABEL\}\}/g, () => escHtml(`${CONFIG.logoTop} ${CONFIG.logoBottom}`))
     .replace('{{CONFIG_JSON}}', () => pageCfg), 'utf8');
 }
-const PORTAL_PAGE = renderPortal();
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
@@ -337,8 +352,8 @@ async function handleConnect(req, res) {
 }
 
 const server = http.createServer(async (req, res) => {
-  let pathname;
-  try { pathname = decodeURIComponent(new URL(req.url, 'http://x').pathname); }
+  let pathname, query;
+  try { const u = new URL(req.url, 'http://x'); pathname = decodeURIComponent(u.pathname); query = u.searchParams; }
   catch (_) { res.writeHead(400); return res.end('Bad request'); }
 
   try {
@@ -357,11 +372,13 @@ const server = http.createServer(async (req, res) => {
     if (assetName && assetName !== 'index.html' && /\.[a-z0-9]+$/i.test(assetName)) {
       const file = path.join(PUBLIC_DIR, assetName);
       if (file.startsWith(PUBLIC_DIR) && fs.existsSync(file)) {
-        return serveFile(res, file, 200, { 'Cache-Control': 'public, max-age=86400' });
+        return serveFile(res, file, 200, { 'Cache-Control': /\.(js|css)$/.test(file) ? 'no-cache' : 'public, max-age=86400' });
       }
     }
 
     // Everything else (/, /guest/s/<site>/, captive-probe URLs) gets the portal page.
+    const preview = CONFIG.themePreview ? String(query.get('theme') || '').toLowerCase() : '';
+    const PORTAL_PAGE = renderPortal(currentTheme(holidays.THEME_IDS.includes(preview) || preview === 'none' ? preview : ''));
     res.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
       'Content-Length': PORTAL_PAGE.length,
@@ -377,6 +394,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(CONFIG.port, () => {
   log(`"${CONFIG.title}" portal listening on :${CONFIG.port}`);
+  const t = currentTheme('');
+  log(`Theme: ${CONFIG.theme === 'auto' ? `auto (${CONFIG.timeZone}) \u2014 today: ${t.id}` : CONFIG.theme}`);
   if (DEMO_MODE) log('WARNING: UNIFI_URL not set — running in DEMO MODE (password is checked but no device is authorized).');
   else log(`UniFi controller: ${CONFIG.unifi.url} (type: ${CONFIG.unifi.type}, site: ${CONFIG.unifi.site || 'from redirect'})`);
 });
