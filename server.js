@@ -32,7 +32,8 @@ const CONFIG = {
   theme: env('THEME', 'auto').toLowerCase(), // auto | off | christmas | easter | ...
   themePreview: env('THEME_PREVIEW', 'true').toLowerCase() !== 'false', // allow ?theme=<id> in the URL
   timeZone: env('PORTAL_TIMEZONE', 'Australia/Adelaide'),
-  music: env('MUSIC', 'on').toLowerCase() !== 'off', // 8-bit background music (starts on first tap)
+  music: env('MUSIC', 'on').toLowerCase() !== 'off', // background music (starts on first tap)
+  wrongVideo: env('WRONG_PASSWORD_VIDEO', ''), // optional video file shown when the password is wrong
   guestMinutes: parseInt(env('GUEST_MINUTES', '1440'), 10), // 24h
   successUrl: env('SUCCESS_URL', ''), // optional fixed landing page after login
   unifi: {
@@ -64,6 +65,42 @@ if (!CONFIG.portalPassword) {
 }
 
 const DEMO_MODE = !CONFIG.unifi.url;
+
+// ---------------------------------------------------------------- optional wrong-password video
+const VIDEO_TYPES = { '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime' };
+let wrongVideo = null; // { file, size, type }
+if (CONFIG.wrongVideo) {
+  try {
+    const st = fs.statSync(CONFIG.wrongVideo);
+    const type = VIDEO_TYPES[path.extname(CONFIG.wrongVideo).toLowerCase()];
+    if (!st.isFile()) throw new Error('not a file');
+    if (!type) throw new Error('use an .mp4, .m4v, .webm or .mov file');
+    wrongVideo = { file: CONFIG.wrongVideo, size: st.size, type };
+  } catch (e) {
+    console.warn(`WARNING: WRONG_PASSWORD_VIDEO "${CONFIG.wrongVideo}" can't be used (${e.message}) - check the volume mapping`);
+  }
+}
+
+// Stream a video with HTTP range support (iPhones refuse to play video without it).
+function serveVideo(req, res, v) {
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+  const base = { 'Content-Type': v.type, 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=3600', ...SECURITY_HEADERS };
+  if (range) {
+    let start = range[1] === '' ? v.size - parseInt(range[2], 10) : parseInt(range[1], 10);
+    let end = range[1] !== '' && range[2] !== '' ? parseInt(range[2], 10) : v.size - 1;
+    if (isNaN(start) || start < 0) start = 0;
+    end = Math.min(end, v.size - 1);
+    if (start > end || start >= v.size) {
+      res.writeHead(416, { ...base, 'Content-Range': `bytes */${v.size}` }); return res.end();
+    }
+    res.writeHead(206, { ...base, 'Content-Range': `bytes ${start}-${end}/${v.size}`, 'Content-Length': end - start + 1 });
+    if (req.method === 'HEAD') return res.end();
+    return fs.createReadStream(v.file, { start, end }).pipe(res);
+  }
+  res.writeHead(200, { ...base, 'Content-Length': v.size });
+  if (req.method === 'HEAD') return res.end();
+  return fs.createReadStream(v.file).pipe(res);
+}
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // ---------------------------------------------------------------- page rendering
@@ -88,6 +125,7 @@ function renderPortal(theme) {
     theme: theme.id,
     banner: theme.banner,
     music: CONFIG.music,
+    wrongVideo: wrongVideo ? '/wrong-password-video' : '',
   }).replace(/</g, '\\u003c');
   return Buffer.from(tpl
     .replace(/\{\{TITLE_HEADING\}\}/g, () => escHtml(CONFIG.title).replace(/-/g, '&#8209;')) // keep "Wi-Fi" together
@@ -494,6 +532,11 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, demo: DEMO_MODE });
     }
 
+    if ((req.method === 'GET' || req.method === 'HEAD') && pathname === '/wrong-password-video') {
+      if (!wrongVideo) { res.writeHead(404); return res.end('Not found'); }
+      return serveVideo(req, res, wrongVideo);
+    }
+
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405); return res.end('Method not allowed');
     }
@@ -538,6 +581,7 @@ server.on('error', (err) => {
 
 server.listen(CONFIG.port, () => {
   log(`"${CONFIG.title}" portal listening on :${CONFIG.port}`);
+  if (wrongVideo) log(`Wrong-password video: ${wrongVideo.file} (${(wrongVideo.size / 1048576).toFixed(1)} MB)`);
   const t = currentTheme('');
   log(`Theme: ${CONFIG.theme === 'auto' ? `auto (${CONFIG.timeZone}) \u2014 today: ${t.id}` : CONFIG.theme}`);
   if (DEMO_MODE) log('WARNING: UNIFI_URL not set — running in DEMO MODE (password is checked but no device is authorized).');

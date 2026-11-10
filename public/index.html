@@ -259,6 +259,19 @@ label.lbl .arrow{display:inline-block; color:var(--amber); animation:nudge 1.2s 
   font:600 .72rem/1.2 var(--body); letter-spacing:.04em; color:var(--cyan-soft); background:rgba(8,4,24,.7); border:1px solid rgba(22,242,255,.35);
   pointer-events:none; animation:rise .6s 2s both; transition:opacity .5s}
 .music-hint.gone{opacity:0}
+/* wrong-password video */
+.wrongvid{position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:16px; background:rgba(3,1,10,.82);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); opacity:0; transition:opacity .25s}
+.wrongvid.on{opacity:1}
+.wrongvid[hidden]{display:none}
+.wv-inner{display:flex; flex-direction:column; align-items:center; gap:14px; width:min(100%,640px); transform:scale(.85); transition:transform .3s cubic-bezier(.2,1.4,.4,1)}
+.wrongvid.on .wv-inner{transform:none}
+.wv-inner video{width:100%; max-height:62vh; border-radius:14px; background:#000; border:2px solid var(--red); box-shadow:0 0 24px rgba(255,59,92,.7)}
+.wv-hint{color:var(--amber); font-size:.9rem}
+.wv-close{height:52px; padding:0 34px; border:0; border-radius:14px; cursor:pointer; color:#fff;
+  font:800 1rem/1 var(--display); letter-spacing:.18em; text-transform:uppercase;
+  background:linear-gradient(100deg,var(--b1,#ff2bd6),var(--b2,#b43cff)); box-shadow:0 0 18px rgba(255,43,214,.6)}
+.wv-close:focus-visible{outline:3px solid #fff; outline-offset:3px}
 footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px #05020f; letter-spacing:.12em; text-transform:uppercase; text-align:center; opacity:0; animation:rise .8s 1.8s forwards}
 
 /* ================= RESPONSIVE ================= */
@@ -598,6 +611,7 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
     e.preventDefault();
     var value = pw.value.trim();
     if (!value){ fail('Please enter the Wi-Fi password.'); pw.focus(); return; }
+    unlockWrongVideo(); // must happen inside the tap so phones allow it to play with sound later
     go.disabled=true; go.classList.add('loading'); goText.textContent='Connecting';
     msg.className='msg info'; msg.textContent='';
 
@@ -606,14 +620,59 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
     var timer = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 20000);
 
     fetch('/api/connect', {method:'POST', headers:{'Content-Type':'application/json'}, body:body, signal: ctrl ? ctrl.signal : undefined, cache:'no-store'})
-      .then(function(r){ return r.json().catch(function(){ return {ok:false, error:'Unexpected response. Please try again.'}; }); })
+      .then(function(r){ return r.json().catch(function(){ return {ok:false, error:'Unexpected response. Please try again.'}; }).then(function(j){ j.status = r.status; return j; }); })
       .then(function(res){
         clearTimeout(timer);
-        if (!res.ok) return fail(res.error || 'Something went wrong. Please try again.');
+        if (!res.ok) {
+          fail(res.error || 'Something went wrong. Please try again.');
+          if (res.status === 401) showWrongVideo();
+          return;
+        }
         success(res);
       })
       .catch(function(){ clearTimeout(timer); fail('Couldn’t reach the portal. Check you’re still on the Wi-Fi and try again.'); });
   });
+
+  /* ---------- optional wrong-password video (WRONG_PASSWORD_VIDEO) ---------- */
+  var wv = null, wvBox = null, wvHint = null;
+  if (CFG.wrongVideo) {
+    wvBox = document.createElement('div'); wvBox.className = 'wrongvid'; wvBox.hidden = true;
+    wvBox.setAttribute('role', 'dialog'); wvBox.setAttribute('aria-label', 'Wrong password');
+    wvBox.innerHTML = '<div class="wv-inner"><video playsinline preload="auto" loop></video>' +
+      '<div class="wv-hint" hidden>Tap the video for sound</div>' +
+      '<button type="button" class="wv-close">Try again</button></div>';
+    document.body.appendChild(wvBox);
+    wv = wvBox.querySelector('video'); wv.src = CFG.wrongVideo; wvHint = wvBox.querySelector('.wv-hint');
+    wvBox.addEventListener('click', function(e){
+      if (e.target === wv && wv.muted) { wv.muted = false; wvHint.hidden = true; return; }
+      if (e.target === wv) return;
+      hideWrongVideo();
+    });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !wvBox.hidden) hideWrongVideo(); });
+  }
+  var wvUnlocked = false;
+  function unlockWrongVideo(){
+    if (!wv || wvUnlocked) return;
+    wvUnlocked = true;
+    try { wv.muted = true; var p = wv.play(); if (p && p.then) p.then(function(){ wv.pause(); wv.currentTime = 0; }, function(){}); } catch (e) {}
+  }
+  function showWrongVideo(){
+    if (!wv) return;
+    if (window.NeonMusic && window.NeonMusic.duck) window.NeonMusic.duck(true);
+    wvBox.hidden = false; void wvBox.offsetWidth; wvBox.classList.add('on');
+    wvHint.hidden = true;
+    try { wv.currentTime = 0; } catch (e) {}
+    wv.muted = false;
+    var p = wv.play();
+    if (p && p.catch) p.catch(function(){ wv.muted = true; wvHint.hidden = false; wv.play().catch(function(){}); });
+  }
+  function hideWrongVideo(){
+    if (!wv) return;
+    wv.pause(); wvBox.classList.remove('on');
+    setTimeout(function(){ wvBox.hidden = true; }, 250);
+    if (window.NeonMusic && window.NeonMusic.duck) window.NeonMusic.duck(false);
+    pw.focus(); pw.select();
+  }
 
   function success(res){
     document.body.classList.add('online');

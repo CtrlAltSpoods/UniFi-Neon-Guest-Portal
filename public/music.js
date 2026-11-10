@@ -538,6 +538,23 @@
       EVENTS.forEach(function (ev) { document.addEventListener(ev, onFirstGesture, { capture: true, passive: true }); });
       document.addEventListener('visibilitychange', function () { if (!ctx || !started) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
     },
+    // rolling thunder (Halloween lightning)
+    thunder: function () {
+      if (!ctx || !started || muted) return;
+      var t = ctx.currentTime + 0.02;
+      noise(t, 0.25, 0.35, 'highpass', 1800);                  // the crack
+      var src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = noiseBuf; src.loop = true; f.type = 'lowpass'; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(90, t + 3);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.9, t + 0.12);
+      g.gain.setTargetAtTime(0.35, t + 0.3, 0.4); g.gain.setTargetAtTime(0.0001, t + 1.4, 0.7);
+      src.connect(f); f.connect(g); g.connect(bus(0.5)); src.start(t); src.stop(t + 4.5);
+      thump(t + 0.05, 70, 35, 1.2, 0.5);
+    },
+    // fade the music out/in (e.g. while a video plays)
+    duck: function (on) {
+      if (!ctx) return;
+      out.gain.setTargetAtTime(on || muted ? 0 : VOLUME, ctx.currentTime, 0.15);
+    },
     // gentle chime when the guest gets online (skipped on solemn days)
     fanfare: function () {
       if (!ctx || !started || muted || themeId === 'anzac' || themeId === 'remembrance') return;

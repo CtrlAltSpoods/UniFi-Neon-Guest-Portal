@@ -10,3 +10,6 @@ services:
       - "80:80"
     # PORTAL_PASSWORD, PORTAL_TITLE and the UniFi settings come from .env
     env_file: .env
+    # Optional wrong-password video: map your file in and set WRONG_PASSWORD_VIDEO=/media/wrong-password.mp4
+    # volumes:
+    #   - ./wrong-password.mp4:/media/wrong-password.mp4:ro

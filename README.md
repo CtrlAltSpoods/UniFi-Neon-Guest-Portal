@@ -119,16 +119,16 @@ and weekend substitute days.
 
 | Theme | Shows | What you get |
 |---|---|---|
-| `newyear` | New Year's Eve – New Year's Day (+ substitute Monday) | Fireworks over the city, gold sparkles |
-| `australiaday` | 24–26 Jan (+ substitute Monday) | Green & gold, Southern Cross in the sky, falling wattle |
-| `adelaidecup` | Thursday – Adelaide Cup Day (2nd Mon in March) | Neon racehorses galloping down the street, lucky horseshoe |
-| `easter` | Thursday – Easter Monday | Hopping bunny, bunny ears on the logo, 6 hidden eggs to find |
-| `anzac` | 24–25 Apr | Dawn sky, poppy field, falling petals, steady (non-flickering) neon, "Lest We Forget" |
-| `kings` | King's Birthday long weekend (2nd Mon in June) | Crown on the logo, royal purple & gold, bunting |
-| `labour` | Labour Day long weekend (1st Mon in October) | Hard hat on the logo, construction cranes with an 8·8·8 sign |
-| `halloween` | 24–31 Oct | Orange harvest moon, flapping bats, floating ghosts, jack-o'-lanterns, spider web, witch hat, nights-till-Halloween countdown |
-| `remembrance` | 9–11 Nov | Poppy field, falling petals, "Lest We Forget" |
-| `christmas` | 1–30 Dec (Christmas Eve, Christmas Day, Proclamation Day + substitutes) | Snow, Santa's sleigh, fairy lights, presents, tree, Santa hat, sleeps-till-Christmas countdown |
+| `newyear` | New Year's Eve – New Year's Day (+ substitute Monday) | Non-stop fireworks over the city, gold sparkles |
+| `australiaday` | 24–26 Jan (+ substitute Monday) | Green & gold, Southern Cross, falling wattle, fireworks, and a cricket match where the batsman hits a six |
+| `adelaidecup` | Thursday – Adelaide Cup Day (2nd Mon in March) | A six-horse race along the rail to the finish post, camera flashes from the crowd, lucky horseshoe |
+| `easter` | Thursday – Easter Monday | A big Easter bunny hopping across the screen, bunny ears on the logo, 6 hidden eggs to find |
+| `anzac` | 24–25 Apr | A slow dawn sunrise, poppy field, falling poppies, steady (non-flickering) neon, "Lest We Forget" |
+| `kings` | King's Birthday long weekend (2nd Mon in June) | Crown on the logo, royal purple & gold, bunting, royal fireworks |
+| `labour` | Labour Day long weekend (1st Mon in October) | Hard hat on the logo, construction cranes with an 8·8·8 sign, welding sparks |
+| `halloween` | 24–31 Oct | Lightning and thunder, orange harvest moon, swarms of bats, ghosts, glowing eyes in the dark, jack-o'-lanterns, spider web, witch hat, countdown |
+| `remembrance` | 9–11 Nov | Poppy field, falling poppies, "Lest We Forget" |
+| `christmas` | 1–30 Dec (Christmas Eve, Christmas Day, Proclamation Day + substitutes) | Heavy snow, a snowman and snowbank, Santa's sleigh, fairy lights, presents, tree, Santa hat, sleeps-till-Christmas countdown |
 
 Settings:
 
@@ -170,6 +170,26 @@ Each theme has its own track:
 
 To add or change a track, edit the `SONGS` table in `public/music.js`.
 On iPhones, the ring/silent switch mutes web audio, so music is silent when the phone is on silent.
+
+## Wrong-password video (optional)
+
+Show your own video clip, with sound, whenever someone types the wrong password. Background
+music fades out while it plays, and **Try again** (or tapping outside the video) closes it.
+
+1. Put the video file on your Docker host (an `.mp4` with H.264 video and AAC audio plays on every phone).
+2. Map it into the container read-only and point `WRONG_PASSWORD_VIDEO` at it:
+   ```yaml
+   volumes:
+     - /mnt/user/appdata/guest-portal/wrong-password.mp4:/media/wrong-password.mp4:ro
+   environment:
+     - WRONG_PASSWORD_VIDEO=/media/wrong-password.mp4
+   ```
+   On Unraid: in the container template add a **Path** (container path `/media/wrong-password.mp4`,
+   host path to your file, read-only) and a **Variable** `WRONG_PASSWORD_VIDEO=/media/wrong-password.mp4`.
+3. Restart. The log shows `Wrong-password video: ...` when it's picked up, or a warning if the path is wrong.
+
+The video is streamed with HTTP range support so iPhones will play it. If a phone blocks sound, the
+video plays muted with a "Tap the video for sound" hint. Keep your video file out of the repo.
 
 ## Troubleshooting
 

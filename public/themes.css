@@ -162,3 +162,86 @@ body.t-halloween{--pink:#ff7a00; --cyan:#a3ff4f; --violet:#7b2bd9; --accent:#ff7
   .santa,.horse,.bunny-run,.bat,.ghost{display:none}
   .banner{opacity:1}
 }
+
+/* ==================================================================
+   Stronger effects
+=================================================================== */
+.fx-top{position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden}
+
+/* Christmas */
+.t-christmas .santa{animation-duration:15s}
+.snowbank{position:absolute; left:0; right:0; bottom:0; height:4.5%;
+  background:radial-gradient(48px 18px at 50% 100%, #f4f8ff 97%, transparent 100%) 0 0/80px 100% repeat-x,
+             linear-gradient(#eef4ff,#dfe9ff) 0 100%/100% 55% no-repeat;
+  filter:drop-shadow(0 -2px 8px rgba(200,225,255,.7))}
+.snowman{position:absolute; bottom:3%; left:23%; width:clamp(44px,8vw,96px)}
+
+/* Australia Day: cricket */
+.cricket{position:absolute; left:0; right:0; bottom:3%; height:clamp(80px,13vh,130px)}
+.pitch{position:absolute; left:13%; right:15%; bottom:0; height:9px; border-radius:4px; background:rgba(210,185,120,.45); box-shadow:0 0 12px rgba(255,210,122,.35)}
+.stumps{position:absolute; bottom:4px; width:clamp(13px,2vw,22px)}
+.stumps.s1{left:14%} .stumps.s2{right:16%}
+.bowler{position:absolute; left:5%; bottom:0; width:clamp(52px,8vw,92px); animation:bowl 7s linear infinite}
+.bowler .arm{transform-box:view-box; transform-origin:34px 38px; animation:windmill 7s linear infinite}
+.batsman{position:absolute; right:10%; bottom:0; width:clamp(56px,8.5vw,98px)}
+.batsman .bat{transform-box:view-box; transform-origin:28px 46px; animation:swing 7s linear infinite}
+@keyframes bowl{0%{transform:translateX(-14vw); opacity:0} 4%{opacity:1} 30%{transform:translateX(0)} 36%,70%{transform:translateX(2vw); opacity:1} 84%,100%{transform:translateX(2vw); opacity:0}}
+@keyframes windmill{0%,27%{transform:rotate(-70deg)} 33%{transform:rotate(290deg)} 38%,100%{transform:rotate(330deg)}}
+@keyframes swing{0%,43%{transform:rotate(0)} 47%,58%{transform:rotate(135deg)} 70%,100%{transform:rotate(0)}}
+.ball-x{position:absolute; left:0; bottom:calc(3% + 46px); animation:ballx 7s infinite}
+.ball-y{animation:bally 7s infinite}
+.ball{display:block; width:11px; height:11px; border-radius:50%; background:#ff3b3b; box-shadow:0 0 8px #ff3b3b, 0 0 18px #ff6b6b}
+@keyframes ballx{
+  0%,32%{transform:translateX(13vw); opacity:0}
+  33%{transform:translateX(13vw); opacity:1; animation-timing-function:linear}
+  45%{transform:translateX(82vw); animation-timing-function:cubic-bezier(.2,.6,.4,1)}
+  78%{transform:translateX(28vw); opacity:1}
+  80%,100%{transform:translateX(28vw); opacity:0}}
+@keyframes bally{
+  0%,33%{transform:translateY(-30px); animation-timing-function:ease-in}
+  40%{transform:translateY(28px); animation-timing-function:ease-out}
+  45%{transform:translateY(-4px); animation-timing-function:cubic-bezier(.1,.7,.3,1)}
+  78%,100%{transform:translateY(-82vh)}}
+.six{position:absolute; left:6%; top:9%; font:900 clamp(2.4rem,9vw,4.5rem)/1 var(--display); color:#fff; letter-spacing:.04em;
+  text-shadow:0 0 8px #ffc21a, 0 0 22px #ffc21a, 0 0 44px #22e07f; transform-origin:30% 60%; animation:six 7s infinite}
+@keyframes six{0%,62%{opacity:0; transform:scale(.4) rotate(-12deg)} 68%{opacity:1; transform:scale(1.25) rotate(-8deg)} 74%,88%{opacity:1; transform:scale(1) rotate(-8deg)} 94%,100%{opacity:0; transform:scale(1.1) rotate(-8deg)}}
+
+/* Adelaide Cup: the race */
+.race{position:absolute; left:0; right:0; bottom:0; height:clamp(80px,13vh,140px);
+  background:linear-gradient(180deg,transparent 0 10%, rgba(30,120,60,.16) 10% 100%)}
+.rail{position:absolute; left:0; right:0; top:8%; height:3px; background:#fff; box-shadow:0 0 8px #fff, 0 0 16px rgba(255,255,255,.6)}
+.rail::after{content:""; position:absolute; left:0; right:0; top:3px; height:16px; background:repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 2px, transparent 2px 56px)}
+.finish{position:absolute; right:14%; top:-34%; width:4px; height:72%; background:#fff; box-shadow:0 0 8px #fff}
+.finish i{position:absolute; left:4px; top:0; width:26px; height:18px; background:repeating-conic-gradient(#111 0 25%, #fff 0 50%) 0 0/9px 9px; box-shadow:0 0 8px rgba(255,255,255,.7)}
+.racer{position:absolute; left:0; animation:race 7.5s linear infinite}
+.racer .surge{animation:surge 2.4s ease-in-out infinite alternate}
+@keyframes surge{from{transform:translateX(-4vw)}to{transform:translateX(4vw)}}
+.flashbulb{position:absolute; width:5px; height:5px; border-radius:50%; background:#fff; box-shadow:0 0 12px 6px rgba(255,255,255,.9); animation:bulbpop .4s ease-out forwards}
+@keyframes bulbpop{0%{opacity:1; transform:scale(.4)} 30%{opacity:1; transform:scale(1.5)} 100%{opacity:0; transform:scale(1)}}
+
+/* Easter: big hopping bunny */
+.big-bunny{position:absolute; bottom:1%; left:0; width:clamp(100px,18vw,190px); animation:race 13s linear infinite; transform:translateX(-30vw)}
+.big-bunny .hop{transform-origin:50% 100%; animation:bighop .8s cubic-bezier(.3,0,.7,1) infinite}
+@keyframes bighop{0%,100%{transform:translateY(0) scale(1.08,.9)} 12%{transform:translateY(0) scale(.95,1.06)} 50%{transform:translateY(-70%) scale(1)} 88%{transform:translateY(0) scale(1)}}
+
+/* Halloween: lightning, eyes in the dark */
+.bolt{position:absolute; top:0; animation:bolt .9s forwards}
+@keyframes bolt{0%{opacity:0} 5%{opacity:1} 15%{opacity:.15} 25%{opacity:1} 60%{opacity:.8} 100%{opacity:0}}
+.lightning-flash{position:absolute; inset:0; background:#d9d2ff; mix-blend-mode:screen; animation:lflash .9s forwards}
+@keyframes lflash{0%{opacity:0} 5%{opacity:.38} 14%{opacity:.04} 24%{opacity:.28} 60%,100%{opacity:0}}
+.eyes{position:absolute; display:flex; gap:6px; opacity:0; animation:eyes 9s infinite}
+.eyes i{width:6px; height:4px; border-radius:50%; background:currentColor; box-shadow:0 0 6px currentColor, 0 0 12px currentColor; animation:blinkeye 3.5s infinite}
+@keyframes eyes{0%,100%{opacity:0} 12%,58%{opacity:1} 68%{opacity:0}}
+@keyframes blinkeye{0%,46%,54%,100%{transform:scaleY(1)} 50%{transform:scaleY(.1)}}
+
+/* Anzac Day dawn & falling poppies */
+.sunrise{position:absolute; left:22%; bottom:36%; width:clamp(110px,24vw,300px); aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle,#fff3c9 0%,#ffcf6e 34%,#ff8a3d 62%,rgba(255,110,60,0) 71%);
+  box-shadow:0 0 90px 30px rgba(255,150,70,.3); transform:translate(-50%,60vh); animation:sunrise 40s ease-out forwards}
+@keyframes sunrise{to{transform:translate(-50%,0)}}
+.poppy-fall{position:absolute; top:-50px; animation:poppyfall linear forwards}
+@keyframes poppyfall{0%{transform:translate(0,0) rotate(0)} 25%{transform:translate(30px,28vh) rotate(90deg)} 50%{transform:translate(-20px,56vh) rotate(180deg)} 75%{transform:translate(25px,84vh) rotate(270deg)} 100%{transform:translate(0,115vh) rotate(360deg); opacity:.6}}
+
+@media (prefers-reduced-motion:reduce){
+  .big-bunny,.ball-x,.six,.racer,.flashbulb,.bolt,.lightning-flash,.poppy-fall{display:none}
+}
