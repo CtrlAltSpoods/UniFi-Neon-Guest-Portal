@@ -246,6 +246,19 @@ label.lbl .arrow{display:inline-block; color:var(--amber); animation:nudge 1.2s 
 .done p{color:var(--ink-dim); margin-top:8px; line-height:1.45}
 .done a{color:var(--cyan-soft)}
 
+/* music toggle */
+.music-btn{position:fixed; z-index:5; top:max(12px,env(safe-area-inset-top)); right:12px; width:44px; height:44px; border-radius:50%;
+  display:grid; place-items:center; cursor:pointer; color:var(--ink-dim);
+  background:rgba(8,4,24,.55); border:1.5px solid rgba(255,255,255,.18); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  transition:color .2s, border-color .2s, box-shadow .2s}
+.music-btn svg{width:20px; height:20px}
+.music-btn.on{color:#fff; border-color:var(--cyan); box-shadow:0 0 12px var(--cyan); animation:beat .43s ease-in-out infinite alternate}
+.music-btn:focus-visible{outline:2px solid #fff; outline-offset:3px}
+@keyframes beat{to{box-shadow:0 0 20px var(--cyan)}}
+.music-hint{position:fixed; z-index:5; top:calc(max(12px,env(safe-area-inset-top)) + 52px); right:10px; padding:5px 10px; border-radius:8px;
+  font:600 .72rem/1.2 var(--body); letter-spacing:.04em; color:var(--cyan-soft); background:rgba(8,4,24,.7); border:1px solid rgba(22,242,255,.35);
+  pointer-events:none; animation:rise .6s 2s both; transition:opacity .5s}
+.music-hint.gone{opacity:0}
 footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px #05020f; letter-spacing:.12em; text-transform:uppercase; text-align:center; opacity:0; animation:rise .8s 1.8s forwards}
 
 /* ================= RESPONSIVE ================= */
@@ -362,6 +375,7 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
 
 <script type="application/json" id="cfg">{{CONFIG_JSON}}</script>
 <script src="/themes.js"></script>
+<script src="/music.js"></script>
 <script>
 (function(){
   'use strict';
@@ -508,6 +522,12 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
   var THEME = { rain: true };
   try { if (window.NeonThemes) THEME = window.NeonThemes.apply(CFG, { reduce: reduce, topLen: topLen }); } catch (e) { if (window.console) console.warn('theme failed', e); }
 
+  /* ---------- background music (music.js) ---------- */
+  try {
+    var solemn = CFG.theme === 'anzac' || CFG.theme === 'remembrance';
+    if (window.NeonMusic) window.NeonMusic.init({ enabled: CFG.music !== false && !solemn });
+  } catch (e) { if (window.console) console.warn('music failed', e); }
+
   /* ---------- rain ---------- */
   var cvs=document.getElementById('rain'), ctx=cvs.getContext('2d'), drops=[], W=0, H=0, running=!reduce && THEME.rain;
   if (!THEME.rain) cvs.style.display='none';
@@ -599,6 +619,7 @@ footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px 
   function success(res){
     document.body.classList.add('online');
     card.classList.add('ok');
+    if (window.NeonMusic) window.NeonMusic.fanfare();
     if (navigator.vibrate) navigator.vibrate(80);
     var dt = document.getElementById('doneText');
     if (res.redirect){

@@ -142,6 +142,20 @@ Preview any theme in a browser: `http://<docker-host>/?theme=easter`
 
 To add a holiday: add its date window in `holidays.js`, its decorations in `public/themes.js` and its colours in `public/themes.css`.
 
+## Background music
+
+An original 8-bit "keygen" style chiptune plays at 15% volume. It's generated live in the browser
+(no audio files to load) and starts on the guest's first tap, click or key press, since browsers
+don't allow sound before that. A speaker button in the top corner mutes it, and the choice is remembered.
+A short victory jingle plays when a guest gets online. Music is switched off on Anzac Day and
+Remembrance Day.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `MUSIC` | `on` | Set to `off` to disable the music entirely |
+
+On iPhones, the ring/silent switch mutes web audio, so music is silent when the phone is on silent.
+
 ## Troubleshooting
 
 - **"Password accepted, but the network didn't respond"** — check `docker compose logs`; usually a wrong
@@ -160,6 +174,7 @@ public/index.html    the portal page template (title/logo filled in per request)
 holidays.js          SA holiday dates -> active theme
 public/themes.js     holiday decorations, particles, Easter egg hunt
 public/themes.css    holiday colours and animation
+public/music.js      8-bit background music (Web Audio synth)
 public/favicon.svg
 Dockerfile, docker-compose.yml, .env.example
 .github/workflows/docker.yml   builds + publishes the image on every push to main / v* tag

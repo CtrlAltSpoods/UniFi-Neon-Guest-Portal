@@ -32,6 +32,7 @@ const CONFIG = {
   theme: env('THEME', 'auto').toLowerCase(), // auto | off | christmas | easter | ...
   themePreview: env('THEME_PREVIEW', 'true').toLowerCase() !== 'false', // allow ?theme=<id> in the URL
   timeZone: env('PORTAL_TIMEZONE', 'Australia/Adelaide'),
+  music: env('MUSIC', 'on').toLowerCase() !== 'off', // 8-bit background music (starts on first tap)
   guestMinutes: parseInt(env('GUEST_MINUTES', '1440'), 10), // 24h
   successUrl: env('SUCCESS_URL', ''), // optional fixed landing page after login
   unifi: {
@@ -86,6 +87,7 @@ function renderPortal(theme) {
     bottom: CONFIG.logoBottom.toUpperCase(),
     theme: theme.id,
     banner: theme.banner,
+    music: CONFIG.music,
   }).replace(/</g, '\\u003c');
   return Buffer.from(tpl
     .replace(/\{\{TITLE_HEADING\}\}/g, () => escHtml(CONFIG.title).replace(/-/g, '&#8209;')) // keep "Wi-Fi" together
