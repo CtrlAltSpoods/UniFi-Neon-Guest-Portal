@@ -3,7 +3,7 @@
  * South Australian holiday themes.
  *
  * Public holidays follow the SafeWork SA list (Holidays Act 1910), plus
- * Remembrance Day. Each theme shows for a short window around the day
+ * Halloween and Remembrance Day. Each theme shows for a short window around the day
  * (e.g. the long weekend), in the portal's local time zone.
  *
  * To add a theme: add an entry to themeWindows() and a matching visual
@@ -67,6 +67,9 @@ function themeWindows(y) {
   // Labour Day — first Monday in October (long weekend)
   { const d = nthMonday(y, 10, 1); w.push({ id: 'labour', start: dn(y, 10, d) - 3, end: dn(y, 10, d) }); }
 
+  // Halloween — 31 October (not a public holiday), with a week's build-up
+  w.push({ id: 'halloween', start: dn(y, 10, 24), end: dn(y, 10, 31) });
+
   // Remembrance Day — 11 November (not a public holiday)
   w.push({ id: 'remembrance', start: dn(y, 11, 9), end: dn(y, 11, 11) });
 
@@ -86,6 +89,10 @@ function bannerFor(id, y, m, d, extra = {}) {
     case 'anzac': return 'Anzac Day · Lest We Forget';
     case 'kings': return 'Happy King’s Birthday long weekend';
     case 'labour': return 'Happy Labour Day long weekend';
+    case 'halloween': {
+      if (m === 10 && d < 31) { const n = 31 - d; return `${n} night${n === 1 ? '' : 's'} till Halloween\u2026`; }
+      return 'Happy Halloween \u2014 trick or treat!';
+    }
     case 'remembrance': return 'Remembrance Day · Lest We Forget';
     case 'christmas': {
       if (m !== 12) return 'Merry Christmas!';
@@ -99,7 +106,7 @@ function bannerFor(id, y, m, d, extra = {}) {
   }
 }
 
-const THEME_IDS = ['newyear', 'australiaday', 'adelaidecup', 'easter', 'anzac', 'kings', 'labour', 'remembrance', 'christmas'];
+const THEME_IDS = ['newyear', 'australiaday', 'adelaidecup', 'easter', 'anzac', 'kings', 'labour', 'halloween', 'remembrance', 'christmas'];
 
 /** Local calendar date in the given IANA time zone. */
 function localDate(timeZone, now = new Date()) {
@@ -120,7 +127,7 @@ function themeFor(y, m, d) {
 /** A sample of a theme for previews (?theme=christmas or THEME=christmas). */
 function previewTheme(id, y, m, d) {
   if (id === 'none' || !THEME_IDS.includes(id)) return { id: 'none', banner: '' };
-  const sample = { christmas: [12, 25], newyear: [1, 1] }[id];
+  const sample = { christmas: [12, 25], newyear: [1, 1], halloween: [10, 31] }[id];
   return { id, banner: sample ? bannerFor(id, y, sample[0], sample[1], { year: y }) : bannerFor(id, y, m, d) };
 }
 

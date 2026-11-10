@@ -77,7 +77,7 @@ also add that IP to the pre-authorisation allowance.
 
 ## Holiday themes
 
-The portal dresses itself up for every South Australian public holiday (plus Remembrance Day),
+The portal dresses itself up for every South Australian public holiday (plus Halloween and Remembrance Day),
 using the date in `PORTAL_TIMEZONE` (default `Australia/Adelaide`). Dates follow the SafeWork SA
 public holiday list, including the moving ones (Easter, Adelaide Cup, King's Birthday, Labour Day)
 and weekend substitute days.
@@ -91,6 +91,7 @@ and weekend substitute days.
 | `anzac` | 24–25 Apr | Dawn sky, poppy field, falling petals, steady (non-flickering) neon, "Lest We Forget" |
 | `kings` | King's Birthday long weekend (2nd Mon in June) | Crown on the logo, royal purple & gold, bunting |
 | `labour` | Labour Day long weekend (1st Mon in October) | Hard hat on the logo, construction cranes with an 8·8·8 sign |
+| `halloween` | 24–31 Oct | Orange harvest moon, flapping bats, floating ghosts, jack-o'-lanterns, spider web, witch hat, nights-till-Halloween countdown |
 | `remembrance` | 9–11 Nov | Poppy field, falling petals, "Lest We Forget" |
 | `christmas` | 1–30 Dec (Christmas Eve, Christmas Day, Proclamation Day + substitutes) | Snow, Santa's sleigh, fairy lights, presents, tree, Santa hat, sleeps-till-Christmas countdown |
 

@@ -219,6 +219,58 @@
     return '<svg viewBox="0 0 ' + W + ' 60" preserveAspectRatio="xMidYMin slice" aria-hidden="true" style="filter:drop-shadow(0 0 5px rgba(255,211,77,.5))">' + out + '</svg>';
   }
 
+
+  /* ---- Halloween ---- */
+  function batSVG() {
+    var wing = 'M50 26 Q38 6 15 9 Q4 11 0 22 Q8 19 12 26 Q18 21 24 28 Q30 23 36 30 Q42 25 50 31Z';
+    return '<svg viewBox="0 0 100 50" aria-hidden="true" style="overflow:visible; filter:drop-shadow(0 0 3px #b46bff) drop-shadow(0 0 8px rgba(180,107,255,.6))">' +
+      '<g class="wing l"><path d="' + wing + '" fill="#0a0410"/></g>' +
+      '<g class="wing r"><path d="' + wing + '" fill="#0a0410" transform="translate(100 0) scale(-1 1)"/></g>' +
+      '<ellipse cx="50" cy="28" rx="6" ry="9" fill="#0a0410"/><path d="M45 22 l2 -9 l3 6 M55 22 l-2 -9 l-3 6" fill="#0a0410" stroke="#0a0410" stroke-width="2"/>' +
+      '<circle cx="47.5" cy="25" r="1.2" fill="#ffdd55"/><circle cx="52.5" cy="25" r="1.2" fill="#ffdd55"/></svg>';
+  }
+  function pumpkinSVG(face) {
+    var mouths = [
+      'M28 58 L34 66 L40 60 L46 68 L52 60 L58 68 L64 60 L70 66 L74 58 Q52 74 28 58Z',
+      'M30 58 Q50 78 70 58 Q62 62 58 60 L56 66 L50 62 L44 66 L42 60 Q38 62 30 58Z'
+    ];
+    return '<svg viewBox="0 0 100 92" aria-hidden="true" style="overflow:visible; filter:drop-shadow(0 0 8px rgba(255,122,0,.75)) drop-shadow(0 0 20px rgba(255,90,0,.45))">' +
+      '<path d="M50 20 q-2 -12 8 -16" stroke="#3a7a2a" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="30" cy="54" rx="24" ry="32" fill="#d95a00"/><ellipse cx="70" cy="54" rx="24" ry="32" fill="#d95a00"/>' +
+      '<ellipse cx="50" cy="54" rx="26" ry="34" fill="#ff7a00"/>' +
+      '<path d="M50 22 v64 M36 24 q-6 30 0 60 M64 24 q6 30 0 60" stroke="#c04e00" stroke-width="2" fill="none" opacity=".7"/>' +
+      '<g class="candle" fill="#ffdd55"><path d="M30 44 l8 -12 l8 12Z"/><path d="M54 44 l8 -12 l8 12Z"/><path d="M47 52 l3 -5 l3 5Z"/>' +
+      '<path d="' + mouths[face % 2] + '"/></g></svg>';
+  }
+  function ghostSVG() {
+    return '<svg viewBox="0 0 60 80" aria-hidden="true" style="overflow:visible; filter:drop-shadow(0 0 8px rgba(200,255,240,.8))">' +
+      '<path d="M6 40 Q6 4 30 4 Q54 4 54 40 V74 L46 66 L38 76 L30 66 L22 76 L14 66 L6 74Z" fill="rgba(235,255,250,.85)"/>' +
+      '<ellipse cx="22" cy="32" rx="4" ry="6" fill="#120a1e"/><ellipse cx="38" cy="32" rx="4" ry="6" fill="#120a1e"/><ellipse cx="30" cy="48" rx="5" ry="6" fill="#120a1e"/></svg>';
+  }
+  function webSVG() {
+    var lines = '', arcs = '', R = [30, 60, 92, 126, 160], A = [0, 15, 32, 50, 68, 90];
+    A.forEach(function (a) { var r = a * Math.PI / 180; lines += 'M0 0 L' + (170 * Math.cos(r)).toFixed(1) + ' ' + (170 * Math.sin(r)).toFixed(1) + ' '; });
+    R.forEach(function (rad) {
+      for (var i = 0; i < A.length - 1; i++) {
+        var a1 = A[i] * Math.PI / 180, a2 = A[i + 1] * Math.PI / 180, am = (a1 + a2) / 2, rr = rad * 0.86;
+        arcs += 'M' + (rad * Math.cos(a1)).toFixed(1) + ' ' + (rad * Math.sin(a1)).toFixed(1) + ' Q' + (rr * Math.cos(am)).toFixed(1) + ' ' + (rr * Math.sin(am)).toFixed(1) + ' ' + (rad * Math.cos(a2)).toFixed(1) + ' ' + (rad * Math.sin(a2)).toFixed(1) + ' ';
+      }
+    });
+    return '<svg viewBox="0 0 170 260" aria-hidden="true" style="overflow:visible; filter:drop-shadow(0 0 3px rgba(230,220,255,.7))">' +
+      '<path d="' + lines + arcs + '" fill="none" stroke="rgba(235,230,255,.55)" stroke-width="1.2"/>' +
+      '<g class="spider"><line x1="92" y1="62" x2="92" y2="150" stroke="rgba(235,230,255,.6)" stroke-width="1"/>' +
+      '<g transform="translate(92 158)" stroke="#0a0410" stroke-width="2.4" fill="none" stroke-linecap="round">' +
+      '<path d="M-4 -2 q-10 -8 -16 -2 M-4 2 q-12 -2 -16 6 M-4 4 q-8 6 -12 14 M4 -2 q10 -8 16 -2 M4 2 q12 -2 16 6 M4 4 q8 6 12 14"/>' +
+      '<ellipse rx="7" ry="9" fill="#0a0410" stroke="#b46bff" stroke-width="1"/><circle cy="-10" r="4.5" fill="#0a0410" stroke="#b46bff" stroke-width="1"/>' +
+      '<circle cx="-1.6" cy="-11" r="1" fill="#ff3b3b" stroke="none"/><circle cx="1.6" cy="-11" r="1" fill="#ff3b3b" stroke="none"/></g></g></svg>';
+  }
+  function witchHatSVG() {
+    return '<svg viewBox="0 0 100 92" aria-hidden="true" style="overflow:visible; filter:drop-shadow(0 0 5px #b46bff) drop-shadow(0 0 12px rgba(180,107,255,.6))">' +
+      '<path d="M30 70 L50 22 Q56 6 76 2 Q62 14 64 30 L74 70Z" fill="#1c0b2e" stroke="#b46bff" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<path d="M33 62 L71 62 L73 70 L31 70Z" fill="#ff7a00"/><rect x="46" y="60" width="12" height="12" rx="2" fill="none" stroke="#ffdd55" stroke-width="2.5"/>' +
+      '<ellipse cx="52" cy="74" rx="50" ry="10" fill="#1c0b2e" stroke="#b46bff" stroke-width="2.5"/></svg>';
+  }
+
   /* ---------------- particles: snow, petals, wattle, sparkle, fireworks ---------------- */
   function Particles(canvas, opts) {
     var ctx = canvas.getContext('2d'), W = 0, H = 0, list = [], rockets = [], sparks = [], running = true, nextRocket = 0;
@@ -385,6 +437,25 @@
       L.deco(bunnyEarsSVG(), { w: 9, rot: -10, dx: 0, lift: 1 });
       eggHunt(L.front, L.banner, L);
       return { particles: { mode: 'sparkle', colors: ['#ff9fd9', '#9ff3dc', '#fff3a6', '#c3a6ff'], max: 70, density: 14000 }, rain: false, fxRef: true };
+    },
+    halloween: function (L) {
+      for (var i = 0; i < 6; i++) {
+        var b = div('bat', batSVG(), L.back);
+        b.style.top = rnd(6, 34) + '%'; b.style.width = rnd(34, 70) + 'px';
+        b.style.animationDuration = rnd(9, 16) + 's'; b.style.animationDelay = (-rnd(0, 16)) + 's';
+        if (i % 2) b.classList.add('rev');
+      }
+      for (var g = 0; g < 3; g++) {
+        var gh = div('ghost', ghostSVG(), L.mid);
+        gh.style.left = (12 + g * 32 + rnd(-6, 6)) + '%'; gh.style.animationDelay = (-g * 3.3) + 's';
+      }
+      div('web', webSVG(), L.front);
+      var row = div('pumpkins', '', L.front);
+      [[3, 64], [14, 46], [80, 70], [92, 50]].forEach(function (p, k) {
+        var pk = div('pumpkin', pumpkinSVG(k), row); pk.style.left = p[0] + '%'; pk.style.width = 'clamp(' + (p[1] * 0.7) + 'px,' + (p[1] / 9) + 'vw,' + (p[1] * 1.6) + 'px)';
+      });
+      L.deco(witchHatSVG(), { w: 15, rot: -14, dx: -3, lift: 2 });
+      return { particles: { mode: 'sparkle', colors: ['#ff7a00', '#ffb347', '#a3ff4f'], max: 70, density: 14000 }, rain: false };
     },
     anzac: function (L) { return remembrance(L); },
     remembrance: function (L) { return remembrance(L); },

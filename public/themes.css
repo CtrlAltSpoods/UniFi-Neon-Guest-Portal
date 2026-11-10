@@ -128,7 +128,37 @@ body.t-labour{--pink:#ff8a1f; --cyan:#ffe14d; --accent:#ff8a1f; --b1:#ff8a1f; --
 @keyframes swing{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
 .crane .lamp{animation:blink 1.4s steps(1) infinite}
 
+
+/* ---------- Halloween ---------- */
+body.t-halloween{--pink:#ff7a00; --cyan:#a3ff4f; --violet:#7b2bd9; --accent:#ff7a00; --b1:#ff7a00; --b2:#d14a00; --b3:#7b2bd9}
+.t-halloween .sky{
+  background:
+    radial-gradient(120% 60% at 50% 100%, rgba(255,110,0,.32) 0%, rgba(123,43,217,.22) 34%, transparent 64%),
+    linear-gradient(180deg,#04020a 0%,#100624 40%,#2a0d45 72%,#4a1640 100%);
+}
+.t-halloween .moon{ /* big orange harvest moon */
+  width:clamp(110px,20vw,240px); -webkit-mask:none; mask:none;
+  background:radial-gradient(circle at 38% 36%,#fff1c2 0%,#ffc35a 40%,#ff8a1f 80%,#c45200 100%);
+  box-shadow:0 0 50px 14px rgba(255,140,30,.5), 0 0 160px 50px rgba(255,110,0,.25);
+}
+.t-halloween .beam{display:none}
+.bat{position:absolute; left:0; animation:batfly 12s linear infinite; transform:translateX(-20vw)}
+.bat.rev{animation-name:batfly-rev}
+@keyframes batfly{0%{transform:translate(-20vw,0)}25%{transform:translate(20vw,-26px)}50%{transform:translate(55vw,14px)}75%{transform:translate(85vw,-18px)}100%{transform:translate(120vw,6px)}}
+@keyframes batfly-rev{0%{transform:translate(120vw,0) scaleX(-1)}25%{transform:translate(80vw,22px) scaleX(-1)}50%{transform:translate(45vw,-16px) scaleX(-1)}75%{transform:translate(15vw,18px) scaleX(-1)}100%{transform:translate(-20vw,-4px) scaleX(-1)}}
+.bat .wing{transform-box:view-box; transform-origin:50px 28px; animation:flap .22s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(-.35)}}
+.ghost{position:absolute; bottom:22%; width:clamp(34px,6vw,64px); opacity:0; animation:haunt 10s ease-in-out infinite}
+@keyframes haunt{0%{opacity:0; transform:translate(0,40px)}20%{opacity:.85}50%{transform:translate(18px,-60px)}80%{opacity:.7}100%{opacity:0; transform:translate(-10px,-150px)}}
+.web{position:absolute; top:0; left:0; width:clamp(110px,18vw,190px)}
+.spider{animation:dangle 5s ease-in-out infinite}
+@keyframes dangle{0%,100%{transform:translateY(0)}50%{transform:translateY(-46px)}}
+.pumpkins{position:absolute; left:0; right:0; bottom:2.5%; height:1px}
+.pumpkin{position:absolute; bottom:0; transform:translateX(-50%)}
+.pumpkin .candle{animation:candle 1.8s steps(1) infinite}
+@keyframes candle{0%,100%{opacity:1}12%{opacity:.6}14%{opacity:1}53%{opacity:.75}56%{opacity:1}}
+
 @media (prefers-reduced-motion:reduce){
-  .santa,.horse,.bunny-run{display:none}
+  .santa,.horse,.bunny-run,.bat,.ghost{display:none}
   .banner{opacity:1}
 }
