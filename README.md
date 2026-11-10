@@ -144,16 +144,31 @@ To add a holiday: add its date window in `holidays.js`, its decorations in `publ
 
 ## Background music
 
-An original 8-bit "keygen" style chiptune plays at 15% volume. It's generated live in the browser
-(no audio files to load) and starts on the guest's first tap, click or key press, since browsers
-don't allow sound before that. A speaker button in the top corner mutes it, and the choice is remembered.
-A short victory jingle plays when a guest gets online. Music is switched off on Anzac Day and
-Remembrance Day.
+Music is generated live in the browser (no audio files to load), plays at 15% volume and starts on
+the guest's first tap, click or key press, since browsers don't allow sound before that. A speaker
+button in the top corner mutes it, and the choice is remembered. A soft chime plays when a guest gets online.
+
+Each theme has its own track:
+
+| Theme | Track |
+|---|---|
+| *(no holiday)* | Lo-fi beats: electric piano, soft drums, vinyl crackle (original) |
+| Christmas | *Jingle Bells* with sleigh bells and chimes (public domain) |
+| New Year | *Auld Lang Syne* on piano and strings (traditional) |
+| Australia Day | Sunny ukulele and whistle tune (original) |
+| Adelaide Cup | A bugle call, then a galloping race galop with hoofbeats (original) |
+| Easter | Vivaldi's *Spring* on harpsichord, with birdsong (public domain) |
+| Anzac Day | Slow hymn with a lone horn and strings (original) |
+| King's Birthday | *God Save the King* on brass and timpani (traditional) |
+| Labour Day | Jaunty workshop tune with banjo, whistle and anvil (original) |
+| Halloween | Grieg's *In the Hall of the Mountain King*, pizzicato then organ (public domain) |
+| Remembrance Day | Quiet solo piano (original) |
 
 | Variable | Default | What it does |
 |---|---|---|
 | `MUSIC` | `on` | Set to `off` to disable the music entirely |
 
+To add or change a track, edit the `SONGS` table in `public/music.js`.
 On iPhones, the ring/silent switch mutes web audio, so music is silent when the phone is on silent.
 
 ## Troubleshooting
@@ -174,7 +189,7 @@ public/index.html    the portal page template (title/logo filled in per request)
 holidays.js          SA holiday dates -> active theme
 public/themes.js     holiday decorations, particles, Easter egg hunt
 public/themes.css    holiday colours and animation
-public/music.js      8-bit background music (Web Audio synth)
+public/music.js      background music, one track per theme (Web Audio synth)
 public/favicon.svg
 Dockerfile, docker-compose.yml, .env.example
 .github/workflows/docker.yml   builds + publishes the image on every push to main / v* tag
