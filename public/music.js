@@ -464,10 +464,21 @@
     }
   }
 
+  var starting = false;
   function start() {
-    if (started || !enabled) return;
+    if (started || starting || !enabled) return;
     if (!ctx && !setup()) return;
-    if (ctx.state !== 'running') ctx.resume();
+    starting = true;
+    var go = function () {
+      starting = false;
+      if (ctx.state !== 'running' || started) return; // browser still blocking: wait for the next tap
+      begin();
+      detach();
+    };
+    if (ctx.state === 'running') go();
+    else { var p = ctx.resume(); if (p && p.then) p.then(go, function () { starting = false; }); else setTimeout(go, 50); }
+  }
+  function begin() {
     song = SONGS[themeId] || SONGS.lofi;
     tl = compile(song);
     stepDur = 60 / song.bpm / 4;
@@ -496,13 +507,14 @@
       (on ? '<path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>') + '</svg>';
   }
 
+  // Only gestures that browsers count as "user activation" may start audio:
+  // the END of a tap (touchend/pointerup), a click, or a key press - not touchstart.
   function onFirstGesture(e) {
     if (btn && btn.contains(e.target)) return;
-    if (muted) { if (!ctx) setup(); if (ctx && ctx.state !== 'running') ctx.resume(); return; }
+    if (muted) return; // stays silent until they press the speaker button
     start();
-    if (ctx && ctx.state === 'running') detach();
   }
-  var EVENTS = ['pointerdown', 'touchstart', 'touchend', 'click', 'keydown'];
+  var EVENTS = ['touchend', 'pointerup', 'mousedown', 'click', 'keydown'];
   function detach() { EVENTS.forEach(function (ev) { document.removeEventListener(ev, onFirstGesture, true); }); }
 
   window.NeonMusic = {
@@ -514,6 +526,7 @@
       if (!enabled) return;
       btn = document.createElement('button'); btn.type = 'button'; btn.className = 'music-btn';
       btn.addEventListener('click', function () { if (!started) { setMuted(false); start(); return; } setMuted(!muted); });
+      window.__musicState = function () { return { ctx: ctx ? ctx.state : 'none', started: started }; };
       document.body.appendChild(btn);
       if (!muted) {
         hint = document.createElement('div'); hint.className = 'music-hint';
