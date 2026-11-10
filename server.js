@@ -506,6 +506,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Everything else (/, /guest/s/<site>/, captive-probe URLs) gets the portal page.
+    if (req.method === 'GET') {
+      const mac = query.get('id') || query.get('mac');
+      log(`[portal] page view from ${clientIp(req)} ${pathname}${mac ? ` (device ${normMac(mac)}, ap ${query.get('ap') || '?'})` : ' (no device id - opened directly, not via UniFi redirect)'}`);
+    }
     const preview = CONFIG.themePreview ? String(query.get('theme') || '').toLowerCase() : '';
     const PORTAL_PAGE = renderPortal(currentTheme(holidays.THEME_IDS.includes(preview) || preview === 'none' ? preview : ''));
     res.writeHead(200, {
