@@ -12,22 +12,31 @@ to authorise their device. The name shown on the page and in the animated logo c
 
 ## 1. Run it
 
+The image is published to GitHub Container Registry for `amd64` and `arm64` (PCs, NAS boxes, Raspberry Pi):
+`ghcr.io/ctrlaltspoods/unifi-neon-guest-portal:latest`
+
+**With Docker Compose**
+
 ```bash
-cp .env.example .env        # then edit .env: PORTAL_PASSWORD, PORTAL_TITLE, controller URL + login
-docker compose up -d --build
+curl -O https://raw.githubusercontent.com/CtrlAltSpoods/UniFi-Neon-Guest-Portal/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/CtrlAltSpoods/UniFi-Neon-Guest-Portal/main/.env.example
+nano .env                   # set PORTAL_PASSWORD, PORTAL_TITLE, controller URL + login
+docker compose up -d
 docker compose logs -f      # should say "logged in" on the first guest sign-in
 ```
 
-Or without compose:
+**With docker run**
 
 ```bash
-docker build -t neon-guest-portal .
 docker run -d --name neon-guest-portal --restart unless-stopped -p 80:8080 \
   -e PORTAL_PASSWORD='your-password' \
   -e PORTAL_TITLE='My Guest Wi-Fi' \
   -e UNIFI_URL='https://192.168.1.1' -e UNIFI_USERNAME='portal' -e UNIFI_PASSWORD='...' \
-  neon-guest-portal
+  ghcr.io/ctrlaltspoods/unifi-neon-guest-portal:latest
 ```
+
+**Build it yourself** — clone the repo, then `docker build -t neon-guest-portal .`
+(or switch `image:` to `build: .` in `docker-compose.yml`).
 
 `PORTAL_PASSWORD` is required: there is no default, and the container exits with an error if it's missing.
 `.env` is git-ignored so your real values never end up in the repo.
@@ -36,7 +45,7 @@ The container listens on 8080 internally and is published on **port 80**, becaus
 guests to `http://<portal-ip>/guest/s/<site>/`.
 
 Without `UNIFI_URL` set it runs in **demo mode**: the page and password work, but nobody is let online.
-Handy for previewing at `http://<docker-host>/`.
+Handy for previewing at `http://<docker-host>/` (add `?theme=christmas` etc. to preview holiday themes).
 
 ## 2. Create a controller account for the portal
 
@@ -126,4 +135,5 @@ public/themes.js     holiday decorations, particles, Easter egg hunt
 public/themes.css    holiday colours and animation
 public/favicon.svg
 Dockerfile, docker-compose.yml, .env.example
+.github/workflows/docker.yml   builds + publishes the image on every push to main / v* tag
 ```

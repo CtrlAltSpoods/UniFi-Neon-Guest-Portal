@@ -1,7 +1,8 @@
 services:
   guest-portal:
-    build: .
-    image: neon-guest-portal:latest
+    image: ghcr.io/ctrlaltspoods/unifi-neon-guest-portal:latest
+    # To build from source instead of pulling, comment out "image" above and uncomment:
+    # build: .
     container_name: neon-guest-portal
     restart: unless-stopped
     # UniFi sends guests to http://<portal-ip>/guest/s/<site>/ on port 80
