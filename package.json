@@ -1,0 +1,10 @@
+{
+  "name": "neon-guest-portal",
+  "version": "1.0.0",
+  "description": "Neon night-city UniFi external captive portal",
+  "main": "server.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" }
+}

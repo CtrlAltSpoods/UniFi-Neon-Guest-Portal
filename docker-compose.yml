@@ -1,0 +1,11 @@
+services:
+  guest-portal:
+    build: .
+    image: neon-guest-portal:latest
+    container_name: neon-guest-portal
+    restart: unless-stopped
+    # UniFi sends guests to http://<portal-ip>/guest/s/<site>/ on port 80
+    ports:
+      - "80:8080"
+    # PORTAL_PASSWORD, PORTAL_TITLE and the UniFi settings come from .env
+    env_file: .env

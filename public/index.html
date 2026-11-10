@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07031a">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<title>{{TITLE}}</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+/* ------------------------------------------------------------------
+   Guest Wi-Fi portal — neon night city
+   Fully self-contained: no external fonts, scripts or images, because
+   guests have no internet until they sign in.
+------------------------------------------------------------------- */
+:root{
+  --pink:#ff2bd6; --pink-soft:#ff7ce8;
+  --cyan:#16f2ff; --cyan-soft:#9bfaff;
+  --violet:#8b5cff; --amber:#ffb43b; --red:#ff3b5c; --green:#3dffa8;
+  --ink:#f4f1ff; --ink-dim:#b9b2d9;
+  --night-0:#05020f; --night-1:#0d0630; --night-2:#2a0b52; --haze:#7a1a73;
+  --glass:rgba(12,8,34,.62);
+  --display:"Futura","Avenir Next","Century Gothic","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  min-height:100vh; min-height:100dvh;
+  background:var(--night-0);
+  color:var(--ink); font-family:var(--body);
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ================= SCENE ================= */
+.scene{position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none}
+.sky{
+  position:absolute; inset:0;
+  background:
+    radial-gradient(120% 60% at 50% 100%, rgba(255,43,214,.35) 0%, rgba(122,26,115,.25) 30%, transparent 62%),
+    radial-gradient(80% 50% at 15% 95%, rgba(22,242,255,.18), transparent 60%),
+    linear-gradient(180deg, var(--night-0) 0%, var(--night-1) 38%, var(--night-2) 70%, var(--haze) 100%);
+}
+.stars{position:absolute; inset:0 0 40% 0}
+.star{position:absolute; width:2px; height:2px; border-radius:50%; background:#fff; opacity:.6;
+  animation:twinkle var(--d,4s) ease-in-out infinite; animation-delay:var(--dl,0s)}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.9}}
+
+.moon{
+  position:absolute; right:9%; top:9%;
+  width:clamp(70px,13vw,170px); aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #fff6ff 0%, #ffc6f3 35%, #ff5fd9 70%, #b5199c 100%);
+  box-shadow:0 0 40px 10px rgba(255,43,214,.45), 0 0 140px 40px rgba(255,43,214,.25);
+  opacity:.9;
+  -webkit-mask:repeating-linear-gradient(180deg,#000 0 7px,transparent 7px 10px);
+          mask:repeating-linear-gradient(180deg,#000 0 7px,transparent 7px 10px);
+  -webkit-mask-position:0 55%; mask-position:0 55%;
+  animation:moonfloat 9s ease-in-out infinite;
+}
+@keyframes moonfloat{50%{transform:translateY(8px)}}
+
+.beam{
+  position:absolute; bottom:22%; width:14vmax; height:120vmax; transform-origin:50% 100%;
+  background:linear-gradient(0deg, rgba(155,250,255,.22), rgba(155,250,255,0) 80%);
+  clip-path:polygon(46% 100%,54% 100%,100% 0,0 0);
+  filter:blur(2px); mix-blend-mode:screen;
+}
+.beam.b1{left:18%; animation:sweep 11s ease-in-out infinite}
+.beam.b2{left:68%; background:linear-gradient(0deg, rgba(255,124,232,.2), transparent 80%); animation:sweep 13s ease-in-out infinite reverse}
+@keyframes sweep{0%,100%{transform:translateX(-50%) rotate(-28deg)}50%{transform:translateX(-50%) rotate(24deg)}}
+
+.skyline{position:absolute; left:0; right:0; bottom:0; width:100%; will-change:transform}
+.skyline svg{display:block; width:100%; height:100%}
+.layer-far{height:58%; bottom:9%; opacity:.75}
+.layer-mid{height:48%; bottom:7%}
+.layer-near{height:38%; bottom:5%}
+
+.win{fill:var(--c)}
+.win.flick{animation:winflick var(--d,7s) steps(1) infinite; animation-delay:var(--dl,0s)}
+@keyframes winflick{0%,100%{opacity:1}43%{opacity:.08}61%{opacity:1}}
+.blink{animation:blink 1.6s steps(1) infinite}
+@keyframes blink{50%{opacity:.1}}
+.sign{animation:signbuzz 5s linear infinite; animation-delay:var(--dl,0s)}
+@keyframes signbuzz{0%,18%,22%,62%,64%,100%{opacity:1}19%,21%,63%{opacity:.2}}
+body.online .win{opacity:1!important; animation:none}
+
+/* wet street + traffic */
+.street{
+  position:absolute; left:0; right:0; bottom:0; height:7%;
+  background:linear-gradient(180deg,#0a0420 0%,#05020f 100%);
+  border-top:1px solid rgba(255,43,214,.45);
+  box-shadow:0 -6px 30px rgba(255,43,214,.25);
+  overflow:hidden;
+}
+.street::after{ /* reflections */
+  content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(90deg, rgba(22,242,255,.10) 0 2px, transparent 2px 38px, rgba(255,43,214,.10) 38px 40px, transparent 40px 90px);
+  filter:blur(1.5px);
+}
+.trail{position:absolute; height:2px; width:28vw; border-radius:2px; filter:blur(.6px)}
+.trail.r{top:30%; background:linear-gradient(90deg,transparent,#ff2b4e,#ff9aa9); box-shadow:0 0 10px #ff2b4e; animation:drive-r var(--d,3.2s) linear infinite; animation-delay:var(--dl,0s)}
+.trail.l{top:62%; background:linear-gradient(270deg,transparent,#fff7d6,#ffd36b); box-shadow:0 0 10px #ffd36b; animation:drive-l var(--d,2.6s) linear infinite; animation-delay:var(--dl,0s)}
+@keyframes drive-r{from{transform:translateX(-30vw)}to{transform:translateX(110vw)}}
+@keyframes drive-l{from{transform:translateX(110vw)}to{transform:translateX(-30vw)}}
+
+#rain{position:absolute; inset:0; width:100%; height:100%}
+.vignette{position:absolute; inset:0; background:radial-gradient(ellipse at center, transparent 45%, rgba(3,1,10,.75) 100%)}
+.scanlines{position:absolute; inset:0; opacity:.07;
+  background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
+
+/* ================= LAYOUT ================= */
+.wrap{
+  position:relative; z-index:2;
+  min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:clamp(10px,2.5vh,26px);
+  padding:max(18px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom));
+}
+
+/* ================= LOGO ================= */
+.logo{width:min(92vw,600px); filter:drop-shadow(0 0 18px rgba(255,43,214,.25)); animation:hover 6s ease-in-out infinite}
+@keyframes hover{50%{transform:translateY(-6px)}}
+.logo svg{display:block; width:100%; height:auto; overflow:visible}
+.logo text{font-family:var(--display); font-weight:800}
+
+.tube{fill:none; stroke-linejoin:round; stroke-linecap:round}
+.top .tube{stroke:var(--pink); stroke-width:3.2}
+.top .core{fill:none; stroke:#ffe3fa; stroke-width:1.1}
+.top .glow{fill:none; stroke:var(--pink); stroke-width:9; opacity:.55; filter:url(#blur)}
+
+.guest .tube{stroke:var(--cyan); stroke-width:2.6}
+.guest .core{fill:none; stroke:#e9feff; stroke-width:.9}
+.guest .glow{fill:none; stroke:var(--cyan); stroke-width:7; opacity:.55; filter:url(#blur)}
+
+/* draw-on, then buzz alive */
+.draw{stroke-dasharray:1400; stroke-dashoffset:1400; animation:draw 2.2s cubic-bezier(.6,.05,.3,1) forwards}
+.guest .draw{animation-delay:1.1s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.top{opacity:0; animation:ignite 2.6s .2s forwards, buzz 7s 3.2s infinite}
+.guest{opacity:0; animation:ignite 2.4s 1.2s forwards}
+@keyframes ignite{0%{opacity:0}8%{opacity:1}10%{opacity:.2}14%{opacity:1}16%{opacity:.3}22%,100%{opacity:1}}
+@keyframes buzz{0%,92%,96%,100%{opacity:1}93%,95%{opacity:.35}}
+.guest .gl{animation:letterbuzz 4.3s steps(1) infinite; animation-delay:var(--dl)}
+@keyframes letterbuzz{0%,70%,74%,100%{opacity:1}71%,73%{opacity:.15}}
+
+.wifi path{fill:none; stroke-linecap:round; stroke:var(--amber); stroke-width:5}
+.wifi .arc{opacity:.15; animation:arc 2.4s ease-in-out infinite}
+.wifi .a1{animation-delay:0s}.wifi .a2{animation-delay:.3s}.wifi .a3{animation-delay:.6s}
+@keyframes arc{0%,15%{opacity:.15}35%,70%{opacity:1}100%{opacity:.15}}
+.wifi circle{fill:var(--amber)}
+.wifi{filter:url(#glowAmber)}
+
+.underline{stroke:url(#ulGrad); stroke-width:3; stroke-linecap:round; stroke-dasharray:60 520; animation:ul 3.5s linear infinite}
+@keyframes ul{from{stroke-dashoffset:580}to{stroke-dashoffset:0}}
+body.online .logo{animation:hover 6s ease-in-out infinite, celebrate 1.2s ease-out}
+@keyframes celebrate{0%{filter:drop-shadow(0 0 18px rgba(255,43,214,.25))}30%{filter:drop-shadow(0 0 60px rgba(61,255,168,.9)) brightness(1.4)}100%{filter:drop-shadow(0 0 18px rgba(255,43,214,.25))}}
+
+/* ================= CARD ================= */
+@property --ang{syntax:"<angle>"; inherits:false; initial-value:0deg}
+.frame{
+  width:min(100%,440px); border-radius:24px; padding:2px;
+  background:conic-gradient(from var(--ang), var(--pink), var(--violet), var(--cyan), var(--pink));
+  animation:spin 6s linear infinite, rise .9s 1.3s cubic-bezier(.2,.8,.2,1) both;
+  box-shadow:0 0 22px rgba(255,43,214,.35), 0 0 60px rgba(22,242,255,.15);
+}
+@keyframes spin{to{--ang:360deg}}
+@keyframes rise{from{opacity:0; transform:translateY(24px) scale(.97)}to{opacity:1; transform:none}}
+.card{
+  border-radius:22px; background:var(--glass);
+  -webkit-backdrop-filter:blur(14px) saturate(140%); backdrop-filter:blur(14px) saturate(140%);
+  padding:clamp(20px,5vw,32px);
+  position:relative; overflow:hidden;
+}
+.card h1{font-family:var(--display); font-weight:700; font-size:clamp(1.25rem,4.8vw,1.6rem); letter-spacing:.02em; line-height:1.2}
+.card h1 span{color:var(--cyan-soft); text-shadow:0 0 12px rgba(22,242,255,.6)}
+.card p.sub{color:var(--ink-dim); margin-top:6px; font-size:clamp(.95rem,3.6vw,1.02rem); line-height:1.45}
+.ssid{display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:4px 10px; border-radius:99px;
+  font-size:.8rem; color:var(--cyan-soft); border:1px solid rgba(22,242,255,.35); background:rgba(22,242,255,.07)}
+.ssid[hidden]{display:none}
+.dot{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:blink 1.6s steps(1) infinite}
+
+form{margin-top:20px}
+label.lbl{display:flex; align-items:center; gap:8px; font-weight:700; font-size:.82rem; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan-soft); margin-bottom:8px}
+label.lbl .arrow{display:inline-block; color:var(--amber); animation:nudge 1.2s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(4px)}}
+.field{position:relative}
+.field input{
+  width:100%; height:58px; border-radius:14px;
+  padding:0 58px 0 18px;
+  font:600 1.15rem/1 var(--body); letter-spacing:.06em; color:#fff;
+  background:rgba(4,2,16,.82);
+  border:2px solid var(--cyan); outline:none;
+  box-shadow:0 0 0 0 rgba(22,242,255,.0), inset 0 0 18px rgba(22,242,255,.12);
+  animation:attention 2.4s ease-in-out infinite;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field input::placeholder{color:#8f88b5; letter-spacing:.02em; font-weight:500}
+@keyframes attention{0%,100%{box-shadow:0 0 6px rgba(22,242,255,.45), inset 0 0 18px rgba(22,242,255,.12)}50%{box-shadow:0 0 22px rgba(22,242,255,.85), inset 0 0 22px rgba(22,242,255,.2)}}
+.field input:focus{animation:none; border-color:#fff; box-shadow:0 0 0 4px rgba(22,242,255,.35), 0 0 28px rgba(22,242,255,.9), inset 0 0 18px rgba(22,242,255,.2)}
+.field.bad input{border-color:var(--red); animation:none; box-shadow:0 0 0 4px rgba(255,59,92,.25), 0 0 24px rgba(255,59,92,.7)}
+.reveal{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:46px; height:46px; border-radius:10px; border:0; cursor:pointer;
+  background:transparent; color:var(--ink-dim); display:grid; place-items:center;
+}
+.reveal:hover,.reveal:focus-visible{color:#fff; background:rgba(255,255,255,.07); outline:none}
+.reveal svg{width:22px; height:22px}
+
+.btn{
+  position:relative; overflow:hidden; width:100%; height:58px; margin-top:16px;
+  border:0; border-radius:14px; cursor:pointer;
+  font:800 1.05rem/1 var(--display); letter-spacing:.22em; text-transform:uppercase; color:#fff;
+  background:linear-gradient(100deg,#ff2bd6 0%,#b43cff 55%,#5d5cff 100%);
+  box-shadow:0 0 18px rgba(255,43,214,.6), 0 8px 30px rgba(139,92,255,.35);
+  transition:transform .15s, box-shadow .2s, filter .2s;
+}
+.btn::after{content:""; position:absolute; top:0; bottom:0; width:40%; left:-60%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent); animation:shine 3s ease-in-out infinite}
+@keyframes shine{0%,40%{left:-60%}80%,100%{left:130%}}
+.btn:hover{filter:brightness(1.12); box-shadow:0 0 28px rgba(255,43,214,.85), 0 8px 34px rgba(139,92,255,.5)}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:3px solid #fff; outline-offset:3px}
+.btn[disabled]{cursor:progress; filter:saturate(.7)}
+.btn .spin{display:none; width:18px; height:18px; margin-right:10px; vertical-align:-3px; border-radius:50%;
+  border:2.5px solid rgba(255,255,255,.35); border-top-color:#fff; animation:rot .8s linear infinite}
+.btn.loading .spin{display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+.msg{min-height:1.4em; margin-top:12px; font-size:.95rem; line-height:1.4; color:var(--red); text-shadow:0 0 10px rgba(255,59,92,.5)}
+.msg.info{color:var(--amber); text-shadow:none}
+.shake{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+.terms{margin-top:6px; font-size:.78rem; color:#8f88b5; line-height:1.45}
+
+/* success */
+.done{display:none; text-align:center; padding:6px 0 4px}
+.card.ok form, .card.ok .intro{display:none}
+.card.ok .done{display:block; animation:rise .6s both}
+.check{width:88px; height:88px; margin:4px auto 14px; display:block}
+.check circle{fill:none; stroke:var(--green); stroke-width:4; stroke-dasharray:260; stroke-dashoffset:260; animation:draw .8s forwards; filter:drop-shadow(0 0 8px var(--green))}
+.check path{fill:none; stroke:var(--green); stroke-width:6; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:80; stroke-dashoffset:80; animation:draw .5s .6s forwards; filter:drop-shadow(0 0 8px var(--green))}
+.done h2{font-family:var(--display); font-size:clamp(1.4rem,5.5vw,1.8rem); color:var(--green); text-shadow:0 0 16px rgba(61,255,168,.6)}
+.done p{color:var(--ink-dim); margin-top:8px; line-height:1.45}
+.done a{color:var(--cyan-soft)}
+
+footer{font-size:.75rem; color:#a59ecb; text-shadow:0 1px 6px #05020f, 0 0 12px #05020f; letter-spacing:.12em; text-transform:uppercase; text-align:center; opacity:0; animation:rise .8s 1.8s forwards}
+
+/* ================= RESPONSIVE ================= */
+@media (min-width:900px){
+  .logo{width:min(70vw,680px)}
+  .frame{width:460px}
+}
+@media (max-height:620px) and (orientation:landscape){
+  .wrap{justify-content:flex-start}
+  .logo{width:min(60vw,420px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; transition:none!important}
+  .top,.guest,footer,.frame{opacity:1}
+  .draw{stroke-dashoffset:0}
+  #rain,.beam,.trail{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= BACKGROUND SCENE ================= -->
+<div class="scene" aria-hidden="true">
+  <div class="sky"></div>
+  <div class="stars" id="stars"></div>
+  <div class="moon"></div>
+  <div class="beam b1"></div>
+  <div class="beam b2"></div>
+  <div class="skyline layer-far"  id="layerFar"></div>
+  <div class="skyline layer-mid"  id="layerMid"></div>
+  <div class="skyline layer-near" id="layerNear"></div>
+  <div class="street" id="street"></div>
+  <canvas id="rain"></canvas>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+</div>
+
+<main class="wrap">
+  <!-- ================= ANIMATED LOGO ================= -->
+  <div class="logo" role="img" aria-label="{{LOGO_LABEL}}">
+    <svg viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="blur" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+        <filter id="glowAmber" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="ulGrad" x1="0" x2="1">
+          <stop offset="0" stop-color="#ff2bd6"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#16f2ff"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Wi-Fi mark -->
+      <g class="wifi" transform="translate(300 52)">
+        <path class="arc a3" d="M-38 -10 A54 54 0 0 1 38 -10"/>
+        <path class="arc a2" d="M-25 2 A36 36 0 0 1 25 2"/>
+        <path class="arc a1" d="M-12 14 A18 18 0 0 1 12 14"/>
+        <circle cx="0" cy="26" r="5.5"/>
+      </g>
+
+      <!-- top line (pink neon tube), filled in from config -->
+      <g class="top" id="top">
+        <text class="glow" x="300" y="158" text-anchor="middle" font-size="92" lengthAdjust="spacingAndGlyphs"></text>
+        <text class="tube draw" x="300" y="158" text-anchor="middle" font-size="92" lengthAdjust="spacingAndGlyphs"></text>
+        <text class="core" x="300" y="158" text-anchor="middle" font-size="92" lengthAdjust="spacingAndGlyphs"></text>
+      </g>
+
+      <!-- bottom line (cyan neon, letters buzz independently) -->
+      <g class="guest" id="guest"></g>
+
+      <line class="underline" x1="30" y1="240" x2="570" y2="240"/>
+    </svg>
+  </div>
+
+  <!-- ================= LOGIN CARD ================= -->
+  <div class="frame">
+    <section class="card" id="card" aria-live="polite">
+      <div class="intro">
+        <h1>Welcome to <span>{{TITLE_HEADING}}</span></h1>
+        <p class="sub">Enter the guest password below to get online.</p>
+        <div class="ssid" id="ssid" hidden><span class="dot"></span><span id="ssidName"></span></div>
+      </div>
+
+      <form id="form" novalidate autocomplete="off">
+        <label class="lbl" for="pw"><span class="arrow">&#9656;</span> Wi-Fi password</label>
+        <div class="field" id="field">
+          <input id="pw" name="password" type="password" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false"
+                 enterkeyhint="go" placeholder="Type the password here" aria-describedby="msg" required>
+          <button type="button" class="reveal" id="reveal" aria-label="Show password" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path id="eyeOpen" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle id="eyeDot" cx="12" cy="12" r="3"/>
+              <path id="eyeSlash" d="M3 3l18 18" style="display:none"/>
+            </svg>
+          </button>
+        </div>
+        <button class="btn" id="go" type="submit"><span class="spin"></span><span id="goText">Connect</span></button>
+        <div class="msg" id="msg" role="alert"></div>
+        <p class="terms">By connecting you agree to use this network responsibly.</p>
+      </form>
+
+      <div class="done" id="done">
+        <svg class="check" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="40"/><path d="M32 52 L45 64 L69 38"/>
+        </svg>
+        <h2>You&rsquo;re online!</h2>
+        <p id="doneText">You&rsquo;re all set. Enjoy the night.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer>{{FOOTER}}</footer>
+</main>
+
+<script type="application/json" id="cfg">{{CONFIG_JSON}}</script>
+<script>
+(function(){
+  'use strict';
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent){ var e=document.createElementNS(SVGNS,tag); for(var k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  /* ---------- logo text from server config ---------- */
+  var CFG = {};
+  try { CFG = JSON.parse(document.getElementById('cfg').textContent); } catch(e){}
+  var topWord = String(CFG.top || 'GUEST');
+  var topLen = Math.min(540, Math.max(160, topWord.length * 78));
+  Array.prototype.forEach.call(document.querySelectorAll('#top text'), function(t){
+    t.textContent = topWord; t.setAttribute('textLength', topLen);
+  });
+
+  /* ---------- bottom line letters (each can flicker on its own) ---------- */
+  var guest = document.getElementById('guest');
+  var letters = Array.from(String(CFG.bottom || 'WI-FI'));
+  var gstep = letters.length > 1 ? Math.min(80, 440/(letters.length-1)) : 0;
+  var gfs = letters.length > 8 ? Math.max(30, 58*8/letters.length) : 58;
+  var gx0 = 300 - gstep*(letters.length-1)/2;
+  ['glow','tube draw','core'].forEach(function(cls){
+    letters.forEach(function(ch,i){
+      var t = el('text',{'class':cls+' gl', x: gx0 + i*gstep, y: 222, 'text-anchor':'middle', 'font-size':gfs}, guest);
+      t.style.setProperty('--dl', (i===3? 1.2 : i===1 ? 2.7 : 40) + 's'); // a couple of "dodgy" tubes
+      t.textContent = ch;
+    });
+  });
+  // side bars around the bottom line
+  var barL = gx0 - 70, barR = gx0 + gstep*(letters.length-1) + 40;
+  [['M'+barL+' 202 H'+(barL+30)],['M'+barR+' 202 H'+(barR+30)]].forEach(function(d){
+    el('path',{d:d[0], stroke:'#16f2ff', 'stroke-width':3, 'stroke-linecap':'round', filter:'url(#glowAmber)'}, guest);
+  });
+
+  /* ---------- stars ---------- */
+  var stars = document.getElementById('stars');
+  var n = window.innerWidth < 600 ? 45 : 90;
+  for (var i=0;i<n;i++){
+    var s=document.createElement('i'); s.className='star';
+    s.style.left=rnd(0,100)+'%'; s.style.top=rnd(0,100)+'%';
+    var sz=rnd(1,2.4); s.style.width=s.style.height=sz+'px';
+    s.style.setProperty('--d', rnd(2.5,6)+'s'); s.style.setProperty('--dl', rnd(0,5)+'s');
+    stars.appendChild(s);
+  }
+
+  /* ---------- procedural skyline ---------- */
+  var neon = ['#ff2bd6','#16f2ff','#8b5cff','#ffb43b'];
+  var winWarm = ['#ffd27a','#ffe9b0','#ffb43b'], winCool = ['#9bfaff','#c9b8ff','#ff9be9'];
+  var signs = ['BAR','OPEN','HOTEL','24/7','WI-FI','NOODLE','RAMEN','CLUB','ネオン'];
+  if (CFG.top) signs.push(CFG.top);
+
+  function buildLayer(id, opts){
+    var W = 1600, H = 600;
+    var host = document.getElementById(id);
+    var svg = el('svg',{viewBox:'0 0 '+W+' '+H, preserveAspectRatio:'xMidYMax slice'});
+    var x = -20;
+    while (x < W){
+      var bw = rnd(opts.minW, opts.maxW), bh = rnd(opts.minH, opts.maxH);
+      var y = H - bh;
+      var g = el('g',{}, svg);
+      el('rect',{x:x, y:y, width:bw, height:bh, fill:opts.fill}, g);
+
+      // rooftop shapes
+      if (Math.random() < .35){ el('rect',{x:x+bw*.2, y:y-14, width:bw*.6, height:14, fill:opts.fill}, g); y -= 14; }
+      if (Math.random() < opts.antenna){
+        var ax = x + bw*rnd(.3,.7);
+        el('rect',{x:ax-1.5, y:y-rnd(30,70), width:3, height:70, fill:opts.fill}, g);
+        el('circle',{cx:ax, cy:y-rnd(30,70), r:3.5, fill:'#ff3b5c', 'class':'blink', style:'animation-delay:'+rnd(0,1.6)+'s'}, g);
+      }
+      // neon roof edge
+      if (opts.edge && Math.random() < .55){
+        var c = pick(neon);
+        el('rect',{x:x, y:H-bh, width:bw, height:3, fill:c, opacity:.9, style:'filter:drop-shadow(0 0 6px '+c+')'}, g);
+      }
+      // windows
+      var cols = Math.max(2, Math.floor(bw/opts.win)), rows = Math.floor(bh/opts.win);
+      var palette = Math.random() < .55 ? winWarm : winCool;
+      var lit = rnd(.18,.42);
+      for (var r=1; r<rows-1; r++){
+        for (var cI=0; cI<cols; cI++){
+          if (Math.random() > lit) continue;
+          var w = el('rect',{x: x + 5 + cI*(bw-10)/cols, y: H - bh + r*opts.win + 4,
+                             width: Math.max(2,(bw-10)/cols - opts.gap), height: opts.win - opts.gap - 2,
+                             'class':'win', opacity: rnd(.45,1).toFixed(2)}, g);
+          w.style.setProperty('--c', pick(palette));
+          if (Math.random() < .06){ w.classList.add('flick'); w.style.setProperty('--d', rnd(4,11)+'s'); w.style.setProperty('--dl', rnd(0,8)+'s'); }
+        }
+      }
+      // vertical neon sign
+      if (opts.signs && bw > 60 && Math.random() < .3){
+        var word = pick(signs), sc = pick(neon), fs = 22;
+        var vertical = word.length <= 6 && bh > word.length*fs + 60 && Math.random() < .6;
+        var sg = el('g',{'class':'sign', style:'--dl:'+rnd(0,5)+'s; filter:drop-shadow(0 0 6px '+sc+') drop-shadow(0 0 14px '+sc+')'}, g);
+        if (vertical){
+          var sx = x + bw - 26, sy = H - bh + 30;
+          el('rect',{x:sx-14, y:sy-8, width:28, height:word.length*fs+12, rx:4, fill:'#0a0420', stroke:sc, 'stroke-width':2}, sg);
+          for (var k=0;k<word.length;k++){
+            var t = el('text',{x:sx, y:sy + fs*(k+1) - 4, 'text-anchor':'middle', 'font-size':fs-4, 'font-weight':800, fill:sc, 'font-family':'system-ui,sans-serif'}, sg);
+            t.textContent = word[k];
+          }
+        } else {
+          var tw = word.length*14 + 20, tx = x + bw/2, ty = H - bh + 40;
+          el('rect',{x:tx-tw/2, y:ty-22, width:tw, height:30, rx:6, fill:'#0a0420', stroke:sc, 'stroke-width':2}, sg);
+          var t2 = el('text',{x:tx, y:ty, 'text-anchor':'middle', 'font-size':18, 'font-weight':800, fill:sc, 'font-family':'system-ui,sans-serif', 'letter-spacing':2}, sg);
+          t2.textContent = word;
+        }
+      }
+      x += bw + rnd(opts.minGap, opts.maxGap);
+    }
+    host.appendChild(svg);
+  }
+  buildLayer('layerFar', {minW:50,maxW:120,minH:180,maxH:560,fill:'#1d0c47',win:16,gap:5,antenna:.25,edge:false,signs:false,minGap:-10,maxGap:6});
+  buildLayer('layerMid', {minW:70,maxW:150,minH:140,maxH:470,fill:'#120634',win:20,gap:6,antenna:.3,edge:true,signs:true,minGap:-6,maxGap:10});
+  buildLayer('layerNear',{minW:90,maxW:200,minH:110,maxH:380,fill:'#07021a',win:24,gap:7,antenna:.2,edge:true,signs:true,minGap:0,maxGap:24});
+
+  /* ---------- traffic light trails ---------- */
+  var street = document.getElementById('street');
+  for (var t=0;t<5;t++){
+    ['r','l'].forEach(function(dir){
+      var d=document.createElement('i'); d.className='trail '+dir;
+      d.style.setProperty('--d', rnd(2.2,4.5)+'s'); d.style.setProperty('--dl', (-rnd(0,4.5))+'s');
+      d.style.width = rnd(14,34)+'vw'; d.style.marginTop = rnd(-3,3)+'px';
+      street.appendChild(d);
+    });
+  }
+
+  /* ---------- parallax (pointer on desktop, gentle drift on phones) ---------- */
+  var far=document.getElementById('layerFar'), mid=document.getElementById('layerMid'), near=document.getElementById('layerNear');
+  function para(px){ far.style.transform='translateX('+(px*-6)+'px)'; mid.style.transform='translateX('+(px*-12)+'px)'; near.style.transform='translateX('+(px*-22)+'px)'; }
+  if (!reduce){
+    var target=0, cur=0, pointer=false;
+    window.addEventListener('pointermove', function(e){ if(e.pointerType==='mouse'){ pointer=true; target=(e.clientX/window.innerWidth-.5)*2; } }, {passive:true});
+    (function loop(ts){
+      if (!pointer) target = Math.sin((ts||0)/5200)*.8;
+      cur += (target-cur)*.05; para(cur);
+      requestAnimationFrame(loop);
+    })();
+  }
+
+  /* ---------- rain ---------- */
+  var cvs=document.getElementById('rain'), ctx=cvs.getContext('2d'), drops=[], W=0, H=0, running=!reduce;
+  function size(){
+    var dpr=Math.min(window.devicePixelRatio||1, 2);
+    W=window.innerWidth; H=window.innerHeight;
+    cvs.width=W*dpr; cvs.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    var count = Math.round(Math.min(220, W*H/7000));
+    drops=[]; for (var i=0;i<count;i++) drops.push(newDrop(true));
+  }
+  function newDrop(any){ return {x:rnd(-50,W+50), y:any?rnd(-H,H):rnd(-80,-10), l:rnd(10,26), v:rnd(9,17), a:rnd(.15,.45), c:Math.random()<.18?'255,124,232':'170,220,255'}; }
+  function rain(){
+    if (!running) return;
+    ctx.clearRect(0,0,W,H);
+    ctx.lineWidth=1.1;
+    for (var i=0;i<drops.length;i++){
+      var d=drops[i];
+      ctx.strokeStyle='rgba('+d.c+','+d.a+')';
+      ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-d.l*.18, d.y+d.l); ctx.stroke();
+      d.y+=d.v; d.x-=d.v*.18;
+      if (d.y>H){ // splash
+        ctx.fillStyle='rgba('+d.c+','+(d.a*.8)+')'; ctx.fillRect(d.x-2, H-3, 4, 1.2);
+        drops[i]=newDrop(false);
+      }
+    }
+    requestAnimationFrame(rain);
+  }
+  window.addEventListener('resize', size); size();
+  if (running) rain();
+  document.addEventListener('visibilitychange', function(){ var was=running; running=!document.hidden && !reduce; if(running && !was) rain(); });
+
+  /* ================= PORTAL LOGIC ================= */
+  var qs = new URLSearchParams(location.search);
+  var siteMatch = location.pathname.match(/\/guest\/s\/([^\/]+)/);
+  var ctxData = {
+    id:   qs.get('id')   || qs.get('mac') || '',
+    ap:   qs.get('ap')   || '',
+    t:    qs.get('t')    || '',
+    url:  qs.get('url')  || '',
+    ssid: qs.get('ssid') || '',
+    site: siteMatch ? decodeURIComponent(siteMatch[1]) : 'default'
+  };
+  if (ctxData.ssid){ document.getElementById('ssidName').textContent = 'Connected to ' + ctxData.ssid; document.getElementById('ssid').hidden = false; }
+
+  var form=document.getElementById('form'), pw=document.getElementById('pw'), field=document.getElementById('field');
+  var go=document.getElementById('go'), goText=document.getElementById('goText'), msg=document.getElementById('msg'), card=document.getElementById('card');
+
+  // focus the field on desktop (on phones it would cover the page with the keyboard)
+  if (window.matchMedia && matchMedia('(pointer:fine)').matches) setTimeout(function(){ pw.focus({preventScroll:true}); }, 1500);
+
+  document.getElementById('reveal').addEventListener('click', function(){
+    var show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    this.setAttribute('aria-pressed', show); this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    document.getElementById('eyeSlash').style.display = show ? '' : 'none';
+    pw.focus();
+  });
+  pw.addEventListener('input', function(){ field.classList.remove('bad'); msg.textContent=''; msg.className='msg'; });
+
+  function fail(text){
+    msg.className='msg'; msg.textContent=text;
+    field.classList.add('bad');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    go.disabled=false; go.classList.remove('loading'); goText.textContent='Connect';
+    if (navigator.vibrate) navigator.vibrate([60,40,60]);
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var value = pw.value.trim();
+    if (!value){ fail('Please enter the Wi-Fi password.'); pw.focus(); return; }
+    go.disabled=true; go.classList.add('loading'); goText.textContent='Connecting';
+    msg.className='msg info'; msg.textContent='';
+
+    var body = JSON.stringify({password:value, id:ctxData.id, ap:ctxData.ap, t:ctxData.t, url:ctxData.url, ssid:ctxData.ssid, site:ctxData.site});
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 20000);
+
+    fetch('/api/connect', {method:'POST', headers:{'Content-Type':'application/json'}, body:body, signal: ctrl ? ctrl.signal : undefined, cache:'no-store'})
+      .then(function(r){ return r.json().catch(function(){ return {ok:false, error:'Unexpected response. Please try again.'}; }); })
+      .then(function(res){
+        clearTimeout(timer);
+        if (!res.ok) return fail(res.error || 'Something went wrong. Please try again.');
+        success(res);
+      })
+      .catch(function(){ clearTimeout(timer); fail('Couldn’t reach the portal. Check you’re still on the Wi-Fi and try again.'); });
+  });
+
+  function success(res){
+    document.body.classList.add('online');
+    card.classList.add('ok');
+    if (navigator.vibrate) navigator.vibrate(80);
+    var dt = document.getElementById('doneText');
+    if (res.redirect){
+      var n = 4;
+      dt.textContent = 'Taking you to the internet in ' + n + '…';
+      var iv = setInterval(function(){
+        n--; if (n>0){ dt.textContent = 'Taking you to the internet in ' + n + '…'; return; }
+        clearInterval(iv); location.href = res.redirect;
+      }, 1000);
+    } else {
+      dt.textContent = 'You’re all set — enjoy the night. You can close this page.';
+    }
+  }
+})();
+</script>
+</body>
+</html>
