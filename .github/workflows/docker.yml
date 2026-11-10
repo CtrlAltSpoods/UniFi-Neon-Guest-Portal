@@ -45,6 +45,20 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
 
+      - name: Smoke test (portal answers on port 80 as non-root)
+        run: |
+          docker build -t portal-test .
+          docker run -d --name portal-test -e PORTAL_PASSWORD=smoke-test portal-test
+          for i in $(seq 1 20); do
+            docker exec portal-test wget -qO- http://127.0.0.1:80/healthz && break
+            sleep 1
+          done
+          docker exec portal-test wget -qO- http://127.0.0.1:80/healthz | grep '"ok":true'
+          docker exec portal-test sh -c 'wget -qO- http://127.0.0.1:80/ | grep -q "<title>"'
+          test "$(docker exec portal-test id -un)" = node
+          docker logs portal-test
+          docker rm -f portal-test
+
       - name: Build and push (amd64 + arm64)
         uses: docker/build-push-action@v6
         with:

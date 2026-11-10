@@ -28,7 +28,7 @@ docker compose logs -f      # should say "API key OK"
 **With docker run**
 
 ```bash
-docker run -d --name neon-guest-portal --restart unless-stopped -p 80:8080 \
+docker run -d --name neon-guest-portal --restart unless-stopped -p 80:80 \
   -e PORTAL_PASSWORD='your-password' \
   -e PORTAL_TITLE='My Guest Wi-Fi' \
   -e UNIFI_URL='https://192.168.1.1' -e UNIFI_API_KEY='your-api-key' \
@@ -41,8 +41,16 @@ docker run -d --name neon-guest-portal --restart unless-stopped -p 80:8080 \
 `PORTAL_PASSWORD` is required: there is no default, and the container exits with an error if it's missing.
 `.env` is git-ignored so your real values never end up in the repo.
 
-The container listens on 8080 internally and is published on **port 80**, because UniFi sends
-guests to `http://<portal-ip>/guest/s/<site>/`.
+The container listens on **port 80**, because UniFi always sends guests to
+`http://<portal-ip>/guest/s/<site>/`. It calls your controller on **port 443**
+(`https://<console>/proxy/network/integration/v1`).
+
+**Networking tips**
+- Simplest: run it on a Docker host on your main LAN with normal Docker networking (`-p 80:80`), and put
+  the Docker host's IP in UniFi's External Portal Server setting.
+- If you give the container its own IP (macvlan/ipvlan), use that IP in UniFi. It already listens on port 80.
+  That network must be allowed to reach the console on TCP 443. Don't put it on the guest network: guest
+  networks are blocked from the console.
 
 Without `UNIFI_URL` set it runs in **demo mode**: the page and password work, but nobody is let online.
 Handy for previewing at `http://<docker-host>/` (add `?theme=christmas` etc. to preview holiday themes).

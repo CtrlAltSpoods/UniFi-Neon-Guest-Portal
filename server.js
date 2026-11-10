@@ -521,6 +521,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EACCES' || err.code === 'EADDRINUSE') {
+    console.error(`FATAL: can't listen on port ${CONFIG.port} (${err.code}). ` +
+      (err.code === 'EACCES' ? 'Remove "no-new-privileges" from the container\'s security options, or set PORT=8080 and map host port 80 to it.' : 'Something else is already using that port.'));
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(CONFIG.port, () => {
   log(`"${CONFIG.title}" portal listening on :${CONFIG.port}`);
   const t = currentTheme('');
